@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>קולם - תיעוד ביוגרפיה קולית</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     
     <!-- Google Fonts for premium Hebrew typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -295,6 +296,8 @@
             max-width: 650px;
             padding: 35px;
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-title {
@@ -483,6 +486,11 @@
             <h2 class="modal-title">⚙️ הגדרות מערכת</h2>
             
             <div class="form-group">
+                <label class="form-label" for="gas-url-input">קישור ה-Web App של גוגל:</label>
+                <input type="text" id="gas-url-input" class="form-input" placeholder="הדבק את הקישור המתחיל ב-script.google.com">
+            </div>
+
+            <div class="form-group">
                 <label class="form-label" for="username-input">שם המשתמש:</label>
                 <input type="text" id="username-input" class="form-input">
             </div>
@@ -510,7 +518,7 @@
     </div>
 
     <div id="api-warning">
-        <div id="warning-text">שגיאה: מפתח ה-API של Gemini לא הוגדר.</div>
+        <div id="warning-text">שגיאה: מפתח ה-API של Gemini או קישור הענן לא הוגדרו.</div>
         <button onclick="closeWarning()">הבנתי</button>
     </div>
 
@@ -711,8 +719,6 @@
 
     <!-- App Controller -->
     <script>
-        const recorder = new WavRecorder();
-        
         let isRecording = false;
         let isListening = false;
         let userName = "אבא";
@@ -722,6 +728,34 @@
         let recordedBlob = null;
         let currentAudioPlayback = null;
         let activeStoryUrl = "";
+        
+        // Deployed Web App API URL from localStorage
+        let gasWebAppUrl = localStorage.getItem('gasWebAppUrl') || "";
+
+        // API Caller function to contact Google Apps Script via CORS
+        async function callGAS(action, params = {}) {
+            if (!gasWebAppUrl) {
+                throw new Error("כתובת ה-Web App של Google Apps Script לא הוגדרה בהגדרות המערכת.");
+            }
+            
+            const payload = { action: action, ...params };
+            
+            const res = await fetch(gasWebAppUrl, {
+                method: 'POST',
+                mode: 'cors',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8'
+                },
+                body: JSON.stringify(payload),
+                redirect: 'follow'
+            });
+            
+            if (!res.ok) {
+                throw new Error(`שגיאה בחיבור לענן (קוד ${res.status})`);
+            }
+            
+            return await res.json();
+        }
 
         // Init Speech Synthesis and load config
         window.addEventListener('DOMContentLoaded', () => {
@@ -745,89 +779,87 @@
             }, 800);
         }
 
-        function loadConfig() {
-            google.script.run
-                .withSuccessHandler(function(data) {
-                    userName = data.user_name || "אבא";
-                    appVersion = data.version || "0.0.12";
-                    hasApiKey = data.has_api_key;
-                    activeStoryUrl = data.active_story_url || "";
+        async function loadConfig() {
+            if (!gasWebAppUrl) {
+                document.getElementById('status-bar').innerText = "אנא הגדר את כתובת ה-Web App של גוגל בהגדרות";
+                showWarning("אנא פתח את הגדרות המערכת והזן את קישור ה-Web App שהעתקת מגוגל.");
+                return;
+            }
+            
+            try {
+                const data = await callGAS("getSettings");
+                userName = data.user_name || "אבא";
+                appVersion = data.version || "0.0.12";
+                hasApiKey = data.has_api_key;
+                activeStoryUrl = data.active_story_url || "";
 
-                    document.getElementById('user-greeting').innerText = `שלום, ${userName}`;
-                    document.getElementById('app-version').innerText = `גרסה ${appVersion}`;
-                    
-                    if (data.active_story_name) {
-                        document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
-                    } else {
-                        document.getElementById('active-story-header').innerText = `אין סיפור פעיל`;
-                    }
-                    
-                    document.getElementById('status-bar').innerText = "מוכן לעבודה";
+                document.getElementById('user-greeting').innerText = `שלום, ${userName}`;
+                document.getElementById('app-version').innerText = `גרסה ${appVersion}`;
+                
+                if (data.active_story_name) {
+                    document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
+                } else {
+                    document.getElementById('active-story-header').innerText = `אין סיפור פעיל`;
+                }
+                
+                document.getElementById('status-bar').innerText = "מוכן לעבודה";
 
-                    if (!hasApiKey) {
-                        showWarning("מפתח ה-API של Gemini לא הוגדר. אנא פתח את מסך ההגדרות והזן מפתח.");
-                    } else {
-                        closeWarning();
-                    }
-                    
-                    loadStoriesList();
-                })
-                .withFailureHandler(function(err) {
-                    console.error(err);
-                    document.getElementById('status-bar').innerText = "שגיאה בטעינת ההגדרות מהשרת";
-                })
-                .getSettings();
+                if (!hasApiKey) {
+                    showWarning("מפתח ה-API של Gemini לא הוגדר. אנא פתח את מסך ההגדרות והזן מפתח.");
+                } else {
+                    closeWarning();
+                }
+                
+                loadStoriesList();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('status-bar').innerText = "שגיאה בטעינת ההגדרות מהשרת";
+            }
         }
 
-        function loadStoriesList() {
-            google.script.run
-                .withSuccessHandler(function(data) {
-                    if (data.status === 'success') {
-                        const select = document.getElementById('active-story-select');
-                        select.innerHTML = '';
-                        
-                        data.stories.forEach(story => {
-                            const option = document.createElement('option');
-                            option.value = story.id;
-                            option.text = story.name;
-                            if (story.id === data.active_story_id) {
-                                option.selected = true;
-                            }
-                            select.appendChild(option);
-                        });
-                    }
-                })
-                .withFailureHandler(function(err) {
-                    console.error(err);
-                })
-                .getStories();
+        async function loadStoriesList() {
+            try {
+                const data = await callGAS("getStories");
+                if (data.status === 'success') {
+                    const select = document.getElementById('active-story-select');
+                    select.innerHTML = '';
+                    
+                    data.stories.forEach(story => {
+                        const option = document.createElement('option');
+                        option.value = story.id;
+                        option.text = story.name;
+                        if (story.id === data.active_story_id) {
+                            option.selected = true;
+                        }
+                        select.appendChild(option);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
-        function onSelectStoryChange() {
+        async function onSelectStoryChange() {
             const select = document.getElementById('active-story-select');
             const selectedStoryId = select.value;
             if (!selectedStoryId) return;
             
             document.getElementById('status-bar').innerText = "עובר סיפור...";
-            google.script.run
-                .withSuccessHandler(function(data) {
-                    if (data.status === 'success') {
-                        document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
-                        document.getElementById('status-bar').innerText = `עברנו לעבוד על: ${data.active_story_name}`;
-                        
-                        // Reload configs to sync URL
-                        loadConfig();
-                        
-                        speak(`עברנו לעבוד על הסיפור: ${data.active_story_name}`);
-                    }
-                })
-                .withFailureHandler(function(err) {
-                    console.error(err);
-                })
-                .selectStory(selectedStoryId);
+            try {
+                const data = await callGAS("selectStory", { storyId: selectedStoryId });
+                if (data.status === 'success') {
+                    document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
+                    document.getElementById('status-bar').innerText = `עברנו לעבוד על: ${data.active_story_name}`;
+                    
+                    loadConfig();
+                    speak(`עברנו לעבוד על הסיפור: ${data.active_story_name}`);
+                }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
-        function createNewStory() {
+        async function createNewStory() {
             const input = document.getElementById('new-story-input');
             const storyName = input.value.trim();
             if (!storyName) {
@@ -836,24 +868,22 @@
             }
             
             document.getElementById('status-bar').innerText = "יוצר סיפור חדש...";
-            google.script.run
-                .withSuccessHandler(function(data) {
-                    if (data.status === 'success') {
-                        input.value = '';
-                        document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
-                        document.getElementById('status-bar').innerText = "נוצר סיפור חדש בהצלחה";
-                        speak(`יצרנו סיפור חדש בנושא: ${data.active_story_name}`);
-                        
-                        loadConfig();
-                    } else {
-                        alert("שגיאה ביצירת סיפור חדש: " + data.message);
-                    }
-                })
-                .withFailureHandler(function(err) {
-                    console.error(err);
-                    alert("שגיאת שרת ביצירת הסיפור");
-                })
-                .createNewStory(storyName);
+            try {
+                const data = await callGAS("createNewStory", { storyName: storyName });
+                if (data.status === 'success') {
+                    input.value = '';
+                    document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
+                    document.getElementById('status-bar').innerText = "נוצר סיפור חדש בהצלחה";
+                    speak(`יצרנו סיפור חדש בנושא: ${data.active_story_name}`);
+                    
+                    loadConfig();
+                } else {
+                    alert("שגיאה ביצירת סיפור חדש: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("שגיאת שרת ביצירת הסיפור");
+            }
         }
 
         function openInGoogleDocs() {
@@ -1008,32 +1038,30 @@
             // Convert Wav Blob to Base64 to send to Google Apps Script
             const reader = new FileReader();
             reader.readAsDataURL(recordedBlob);
-            reader.onloadend = () => {
+            reader.onloadend = async () => {
                 const base64Data = reader.result.split(',')[1];
                 
-                google.script.run
-                    .withSuccessHandler(function(response) {
-                        resetToApprovalButtons();
-                        if (response.status === 'success') {
-                            status.innerText = "הסיפור נשמר בהצלחה במסמך!";
-                            speak("נשמר בהצלחה", () => {
-                                recordedBlob = null;
-                                resetToMainScreen();
-                            });
-                        } else {
-                            status.innerText = `שגיאה: ${response.message}`;
-                            speak("שגיאה בעליית השמע. נסה שוב.", () => {
-                                resetToMainScreen();
-                            });
-                        }
-                    })
-                    .withFailureHandler(function(err) {
-                        resetToApprovalButtons();
-                        console.error(err);
-                        status.innerText = "שגיאת רשת בענן";
-                        speak("שגיאת תקשורת עם שרתי גוגל.");
-                    })
-                    .transcribeAudio(base64Data);
+                try {
+                    const response = await callGAS("transcribeAudio", { base64Audio: base64Data });
+                    resetToApprovalButtons();
+                    if (response.status === 'success') {
+                        status.innerText = "הסיפור נשמר בהצלחה במסמך!";
+                        speak("נשמר בהצלחה", () => {
+                            recordedBlob = null;
+                            resetToMainScreen();
+                        });
+                    } else {
+                        status.innerText = `שגיאה: ${response.message}`;
+                        speak("שגיאה בעליית השמע. נסה שוב.", () => {
+                            resetToMainScreen();
+                        });
+                    }
+                } catch (err) {
+                    resetToApprovalButtons();
+                    console.error(err);
+                    status.innerText = "שגיאת רשת בענן";
+                    speak("שגיאת תקשורת עם שרתי גוגל.");
+                }
             };
         }
 
@@ -1053,7 +1081,7 @@
         }
 
         // Toggle Listening (TTS) logic
-        function toggleListening() {
+        async function toggleListening() {
             if (isRecording) {
                 return;
             }
@@ -1067,39 +1095,37 @@
                 listenBtn.classList.add('loading');
                 status.innerText = "קורא את המסמך...";
                 
-                google.script.run
-                    .withSuccessHandler(function(data) {
-                        listenBtn.classList.remove('loading');
-                        
-                        if (data.status === 'empty' || !data.paragraphs || data.paragraphs.length === 0) {
-                            status.innerText = "אין עדיין סיפורים כתובים במסמך.";
-                            speak("המסמך עדיין ריק. לחץ על הכפתור האדום כדי להקליט את הסיפור הראשון שלך.");
-                            return;
-                        }
+                try {
+                    const data = await callGAS("getLastParagraphs");
+                    listenBtn.classList.remove('loading');
+                    
+                    if (data.status === 'empty' || !data.paragraphs || data.paragraphs.length === 0) {
+                        status.innerText = "אין עדיין סיפורים כתובים במסמך.";
+                        speak("המסמך עדיין ריק. לחץ על הכפתור האדום כדי להקליט את הסיפור הראשון שלך.");
+                        return;
+                    }
 
-                        if (data.status === 'success') {
-                            isListening = true;
-                            listenBtn.classList.add('listening');
-                            listenTitle.innerText = "להפסיק להקשיב";
-                            listenSubtitle.innerText = "אני מקריא את מה שכתבנו...";
-                            status.innerText = "מקריא כעת את פסקאות הסיום של הסיפור שלך...";
+                    if (data.status === 'success') {
+                        isListening = true;
+                        listenBtn.classList.add('listening');
+                        listenTitle.innerText = "להפסיק להקשיב";
+                        listenSubtitle.innerText = "אני מקריא את מה שכתבנו...";
+                        status.innerText = "מקריא כעת את פסקאות הסיום של הסיפור שלך...";
 
-                            const textToRead = data.paragraphs.join(". ");
-                            speak("אני מקריא את מה שכתבנו: " + textToRead, () => {
-                                stopListening();
-                            });
-                        } else {
-                            status.innerText = "שגיאה בקריאת המסמך";
-                            speak("מצטער, נתקלתי בשגיאה בקריאת המסמך.");
-                        }
-                    })
-                    .withFailureHandler(function(err) {
-                        console.error(err);
-                        listenBtn.classList.remove('loading');
-                        status.innerText = "שגיאה בחיבור לענן";
-                        speak("שגיאת תקשורת עם הענן.");
-                    })
-                    .getLastParagraphs();
+                        const textToRead = data.paragraphs.join(". ");
+                        speak("אני מקריא את מה שכתבנו: " + textToRead, () => {
+                            stopListening();
+                        });
+                    } else {
+                        status.innerText = "שגיאה בקריאת המסמך";
+                        speak("מצטער, נתקלתי בשגיאה בקריאת המסמך.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    listenBtn.classList.remove('loading');
+                    status.innerText = "שגיאה בחיבור לענן";
+                    speak("שגיאת תקשורת עם הענן.");
+                }
             } else {
                 stopListening();
             }
@@ -1116,19 +1142,22 @@
         }
 
         // Settings Dialog Management
-        function openSettings() {
+        async function openSettings() {
             document.getElementById('username-input').value = userName;
+            document.getElementById('gas-url-input').value = gasWebAppUrl;
             
-            google.script.run
-                .withSuccessHandler(function(data) {
-                    // Pre-fill key placeholder if already set
+            if (gasWebAppUrl) {
+                try {
+                    const data = await callGAS("getSettings");
                     if (data.has_api_key) {
                         document.getElementById('apikey-input').value = "••••••••••••••••";
                     } else {
                         document.getElementById('apikey-input').value = "";
                     }
-                })
-                .getSettings();
+                } catch (e) {
+                    console.error(e);
+                }
+            }
 
             const micSelect = document.getElementById('mic-select');
             const speakerSelect = document.getElementById('speaker-select');
@@ -1169,9 +1198,10 @@
             document.getElementById('settings-modal').style.display = 'none';
         }
 
-        function saveSettings() {
+        async function saveSettings() {
             const newName = document.getElementById('username-input').value.trim();
             let newKey = document.getElementById('apikey-input').value.trim();
+            const newGasUrl = document.getElementById('gas-url-input').value.trim();
             const selectedMic = document.getElementById('mic-select').value;
             const selectedSpeaker = document.getElementById('speaker-select').value;
             
@@ -1183,26 +1213,27 @@
             localStorage.setItem('selectedMic', selectedMic);
             localStorage.setItem('selectedSpeaker', selectedSpeaker);
             
+            gasWebAppUrl = newGasUrl;
+            localStorage.setItem('gasWebAppUrl', gasWebAppUrl);
+            
             // If API key is still placeholder dots, do not overwrite with dots
             if (newKey.includes("••")) {
                 newKey = "";
             }
 
-            google.script.run
-                .withSuccessHandler(function(response) {
-                    if (response.status === 'success') {
-                        loadConfig();
-                        closeSettings();
-                        speak("ההגדרות נשמרו בהצלחה");
-                    } else {
-                        alert("שגיאה בשמירת הגדרות בענן");
-                    }
-                })
-                .withFailureHandler(function(err) {
-                    console.error(err);
-                    alert("שגיאת רשת בשמירת הגדרות");
-                })
-                .saveSettings(newName, newKey);
+            try {
+                const response = await callGAS("saveSettings", { userName: newName, apiKey: newKey });
+                if (response.status === 'success') {
+                    loadConfig();
+                    closeSettings();
+                    speak("ההגדרות נשמרו בהצלחה");
+                } else {
+                    alert("שגיאה בשמירת הגדרות בענן");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("שגיאת רשת בשמירת הגדרות. ודא שקישור הענן תקין.");
+            }
         }
     </script>
 </body>

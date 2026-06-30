@@ -6,6 +6,38 @@ function doGet(e) {
       .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
 }
 
+// CORS POST Handler to support standalone static hosting (GitHub Pages)
+function doPost(e) {
+  var response = {};
+  try {
+    var requestData = JSON.parse(e.postData.contents);
+    var action = requestData.action;
+    
+    if (action === "getSettings") {
+      response = getSettings();
+    } else if (action === "getStories") {
+      response = getStories();
+    } else if (action === "selectStory") {
+      response = selectStory(requestData.storyId);
+    } else if (action === "createNewStory") {
+      response = createNewStory(requestData.storyName);
+    } else if (action === "saveSettings") {
+      response = saveSettings(requestData.userName, requestData.apiKey);
+    } else if (action === "getLastParagraphs") {
+      response = getLastParagraphs();
+    } else if (action === "transcribeAudio") {
+      response = transcribeAudio(requestData.base64Audio);
+    } else {
+      response = { status: "error", message: "פעולה לא מוכרת: " + action };
+    }
+  } catch (err) {
+    response = { status: "error", message: "שגיאת שרת בעיבוד הבקשה: " + err.toString() };
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(response))
+                       .setMimeType(ContentService.MimeType.JSON);
+}
+
 // Get folder named "קולם" or create it if not exists
 function getStoriesFolder() {
   var folderName = "קולם";
