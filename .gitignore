@@ -1,0 +1,19 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local Application Configurations (Contains private API keys!)
+config.json
+
+# Local Data and Audio Backups
+*.docx
+*.wav
+backup_audio/
+logs/
