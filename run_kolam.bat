@@ -14,7 +14,7 @@ if not exist config.json (
     echo   "document_path": "C:/Kolam/my_biography.docx",>> config.json
     echo   "backup_audio_dir": "C:/Kolam/backup_audio",>> config.json
     echo   "user_name": "אבא",>> config.json
-    echo   "version": "0.0.13">> config.json
+    echo   "version": "0.1.13">> config.json
     echo }>> config.json
     echo [חשוב] אנא פתח את הקובץ config.json והזן את מפתח ה-API של Gemini שלך תחת השדה gemini_api_key.
     echo [חשוב] לאחר מכן, הפעל קובץ זה מחדש.

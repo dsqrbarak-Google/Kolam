@@ -471,7 +471,7 @@
     <header>
         <div class="logo-section">
             <h1 class="logo-title">קולם</h1>
-            <div class="version-badge" id="app-version">גרסה 0.0.13</div>
+            <div class="version-badge" id="app-version">גרסה 0.1.13</div>
         </div>
         <div style="display: flex; align-items: center; gap: 30px;">
             <div id="active-story-header" style="font-size: 28px; font-weight: bold; color: var(--accent-yellow); background-color: rgba(241, 196, 15, 0.1); border: 2px solid rgba(241, 196, 15, 0.3); padding: 5px 20px; border-radius: 12px;">סיפור פעיל: טוען...</div>
@@ -719,10 +719,12 @@
 
     <!-- App Controller -->
     <script>
+        const recorder = new WavRecorder();
+        
         let isRecording = false;
         let isListening = false;
         let userName = "אבא";
-        let appVersion = "0.0.13";
+        let appVersion = "0.1.13";
         let hasApiKey = false;
         let isVoiceLoading = false;
         let recordedBlob = null;
@@ -789,7 +791,7 @@
             try {
                 const data = await callGAS("getSettings");
                 userName = data.user_name || "אבא";
-                appVersion = data.version || "0.0.13";
+                appVersion = data.version || "0.1.13";
                 hasApiKey = data.has_api_key;
                 activeStoryUrl = data.active_story_url || "";
 
