@@ -165,7 +165,7 @@ function getSettings() {
     masked_key: apiKey ? (apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length - 4)) : "",
     active_story_name: activeStoryName,
     active_story_url: activeStoryUrl,
-    version: "0.1.14"
+    version: "0.1.15"
   };
 }
 
@@ -224,7 +224,7 @@ function transcribeAudio(base64Audio) {
   
   var url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
   
-  var promptText = "שכתב ותמלל את השמע בעברית לסיפור ביוגרפי קולח ומרגש. שמור על גוף ראשון ('אני') ועל קולו המקורי של המספר, אך ערוך זאת ספרותית, בצורה נקייה משגיאות דיבור, חזרות או מילים קטועות. שלב זאת כפסקה זורמת בתוך הביוגרפיה.";
+  var promptText = "תמלל את השמע בעברית בצורה מדויקת ככל הניתן ומילה במילה (Verbatim). שמור על הניסוח, הסגנון המקורי וקולו של המספר. אל תשנה את המילים, אל תשכתב ספרותית ואל תוסיף דבר. הסר רק גמגומים או מילות קישור חוזרות כמו 'אממ' או 'אה'. פלוט אך ורק את הטקסט המתומלל ללא שום תוספת.";
   
   var payload = {
     "contents": [
