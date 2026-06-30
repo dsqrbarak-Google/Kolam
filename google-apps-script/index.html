@@ -624,7 +624,7 @@
                     }
                 };
 
-                if (deviceId) {
+                if (deviceId && deviceId !== "undefined" && deviceId !== "null" && deviceId !== "") {
                     constraints.audio.deviceId = { exact: deviceId };
                 }
 
@@ -955,7 +955,7 @@
                             status.innerText = "הקלטה פעילה... דבר בקול ברור";
                         } catch (err) {
                             console.error(err);
-                            status.innerText = "שגיאה בגישה למיקרופון";
+                            status.innerText = "שגיאה בגישה למיקרופון: " + err.name + " - " + err.message;
                             speak("שגיאה, לא הצלחתי לגשת למיקרופון");
                         }
                     });
