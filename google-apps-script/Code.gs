@@ -165,7 +165,7 @@ function getSettings() {
     masked_key: apiKey ? (apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length - 4)) : "",
     active_story_name: activeStoryName,
     active_story_url: activeStoryUrl,
-    version: "0.1.13"
+    version: "0.1.14"
   };
 }
 
@@ -302,4 +302,9 @@ function transcribeAudio(base64Audio) {
   } catch (err) {
     return { status: "error", message: "שגיאת שרת: " + err.toString() };
   }
+}
+
+// Temporary function to force authorization of UrlFetchApp scope
+function forceAuth() {
+  UrlFetchApp.fetch("https://generativelanguage.googleapis.com/");
 }

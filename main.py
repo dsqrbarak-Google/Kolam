@@ -47,7 +47,7 @@ def load_config():
             "document_path": "C:/Kolam/my_biography.docx",
             "backup_audio_dir": "C:/Kolam/backup_audio",
             "user_name": "אבא",
-            "version": "0.1.13"
+            "version": "0.1.14"
         }
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
             json.dump(config_data, f, indent=2, ensure_ascii=False)
@@ -77,7 +77,7 @@ def get_config():
     active_story = os.path.basename(doc_path)
     return {
         "user_name": config.get("user_name", "אבא"),
-        "version": config.get("version", "0.1.13"),
+        "version": config.get("version", "0.1.14"),
         "document_path": doc_path,
         "story_dir": story_dir,
         "active_story": active_story,
@@ -244,7 +244,7 @@ async def update_config(data: dict):
     
     return {"status": "success", "config": {
         "user_name": config.get("user_name", "אבא"),
-        "version": config.get("version", "0.1.13"),
+        "version": config.get("version", "0.1.14"),
         "document_path": doc_path,
         "story_dir": story_dir,
         "active_story": active_story,
