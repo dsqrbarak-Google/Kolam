@@ -471,10 +471,29 @@
     <header>
         <div class="logo-section">
             <h1 class="logo-title">קולם</h1>
-            <div class="version-badge" id="app-version">גרסה 0.1.15</div>
+            <div class="version-badge" id="app-version">גרסה 0.1.17</div>
         </div>
         <div style="display: flex; align-items: center; gap: 30px;">
-            <div id="active-story-header" style="font-size: 28px; font-weight: bold; color: var(--accent-yellow); background-color: rgba(241, 196, 15, 0.1); border: 2px solid rgba(241, 196, 15, 0.3); padding: 5px 20px; border-radius: 12px;">סיפור פעיל: טוען...</div>
+            <div class="active-story-container" style="position: relative; direction: rtl;">
+                <div id="active-story-header" onclick="toggleStoriesDropdown(event)" style="font-size: 28px; font-weight: bold; color: var(--accent-yellow); background-color: rgba(241, 196, 15, 0.1); border: 2px solid rgba(241, 196, 15, 0.3); padding: 5px 20px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none;">
+                    <span>סיפור פעיל: <span id="active-story-name-span">טוען...</span></span>
+                    <span style="font-size: 18px; transition: transform 0.2s;" id="dropdown-arrow">▼</span>
+                </div>
+                <div id="stories-dropdown" style="display: none; position: absolute; top: 110%; right: 0; background-color: var(--card-bg); border: 3px solid var(--accent-yellow); border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; min-width: 320px; max-height: 400px; overflow-y: auto; padding: 10px 0; text-align: right;">
+                    <div id="stories-dropdown-list">
+                        <!-- Story options populated dynamically -->
+                    </div>
+                    <div style="border-top: 2px solid #2c3540; margin: 10px 0;"></div>
+                    <div class="dropdown-item edit-story-item" onclick="openInGoogleDocs()" style="padding: 12px 20px; font-size: 24px; color: var(--accent-blue); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px;">
+                        <span>📝</span>
+                        <span>פתח במסמך גוגל (Docs)</span>
+                    </div>
+                    <div class="dropdown-item new-story-item" onclick="openNewStoryModal()" style="padding: 12px 20px; font-size: 24px; color: var(--accent-yellow); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
+                        <span>➕</span>
+                        <span>סיפור חדש...</span>
+                    </div>
+                </div>
+            </div>
             <button onclick="openSettings()" class="btn-settings-header">⚙️ הגדרות מערכת</button>
             <div class="user-greeting" id="user-greeting">שלום, סבא</div>
         </div>
@@ -517,36 +536,30 @@
         </div>
     </div>
 
+    <!-- New Story Modal -->
+    <div id="new-story-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="modal-title">📝 יצירת סיפור חדש</h2>
+            <div class="form-group">
+                <label class="form-label" for="new-story-modal-input">שם הסיפור החדש:</label>
+                <input type="text" id="new-story-modal-input" class="form-input" placeholder="לדוגמה: ילדות בירושלים">
+            </div>
+            <div class="modal-actions">
+                <button onclick="submitNewStory()" class="btn-modal btn-save">צור סיפור</button>
+                <button onclick="closeNewStoryModal()" class="btn-modal btn-cancel">ביטול</button>
+            </div>
+        </div>
+    </div>
+
     <div id="api-warning">
         <div id="warning-text">שגיאה: מפתח ה-API של Gemini או קישור הענן לא הוגדרו.</div>
         <button onclick="closeWarning()">הבנתי</button>
     </div>
 
     <main>
-        <!-- Main Interface (Split Columns) -->
+        <!-- Main Interface (Only Action buttons) -->
         <div id="main-interface" style="display: flex; gap: 40px; width: 100%; align-items: stretch; justify-content: center; flex-wrap: wrap;">
-            
-            <!-- Left Sidebar: Stories List and New Story Creation -->
-            <div class="sidebar-column">
-                <div class="sidebar-title">📜 הסיפורים שלי</div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="active-story-select">עבור לסיפור קיים:</label>
-                    <select id="active-story-select" class="form-select" onchange="onSelectStoryChange()" style="font-size: 24px; padding: 14px; margin-bottom: 15px;"></select>
-                    <button onclick="openInGoogleDocs()" class="btn-create-story" style="background-color: #2b579a; color: white; border: none; font-size: 24px;">📝 פתח במסמך גוגל (Docs)</button>
-                </div>
-                
-                <div style="border-top: 2px solid #2c3540; margin: 15px 0;"></div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="new-story-input">התחל סיפור חדש (הקלד נושא):</label>
-                    <input type="text" id="new-story-input" class="form-input" placeholder="לדוגמה: ילדות בירושלים" style="font-size: 24px; padding: 14px; margin-bottom: 10px;">
-                    <button onclick="createNewStory()" class="btn-create-story">צור סיפור חדש</button>
-                </div>
-            </div>
-
-            <!-- Right Column: Main Buttons -->
-            <div class="action-column">
+            <div class="action-column" style="flex: 1; width: 100%; max-width: 1000px;">
                 <!-- Record Button (Red Circle) -->
                 <div class="card record-card" id="record-btn" onclick="toggleRecording()">
                     <div class="icon-container" id="record-icon-container">
@@ -724,7 +737,7 @@
         let isRecording = false;
         let isListening = false;
         let userName = "אבא";
-        let appVersion = "0.1.15";
+        let appVersion = "0.1.17";
         let hasApiKey = false;
         let isVoiceLoading = false;
         let recordedBlob = null;
@@ -781,6 +794,92 @@
             }, 800);
         }
 
+        // Dropdown toggle
+        function toggleStoriesDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('stories-dropdown');
+            const arrow = document.getElementById('dropdown-arrow');
+            if (dropdown.style.display === 'none' || !dropdown.style.display) {
+                dropdown.style.display = 'block';
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.style.display = 'none';
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('stories-dropdown');
+            const header = document.getElementById('active-story-header');
+            const arrow = document.getElementById('dropdown-arrow');
+            if (dropdown && dropdown.style.display === 'block') {
+                if (!dropdown.contains(e.target) && !header.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                    if (arrow) arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+
+        function openNewStoryModal() {
+            document.getElementById('stories-dropdown').style.display = 'none';
+            const arrow = document.getElementById('dropdown-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            document.getElementById('new-story-modal-input').value = '';
+            document.getElementById('new-story-modal').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('new-story-modal-input').focus();
+            }, 100);
+        }
+
+        function closeNewStoryModal() {
+            document.getElementById('new-story-modal').style.display = 'none';
+        }
+
+        async function submitNewStory() {
+            const input = document.getElementById('new-story-modal-input');
+            const storyName = input.value.trim();
+            if (!storyName) {
+                alert("אנא הקלד נושא לסיפור החדש");
+                return;
+            }
+            
+            document.getElementById('status-bar').innerText = "יוצר סיפור חדש...";
+            try {
+                const data = await callGAS("createNewStory", { storyName: storyName });
+                if (data.status === 'success') {
+                    closeNewStoryModal();
+                    document.getElementById('active-story-name-span').innerText = data.active_story_name;
+                    document.getElementById('status-bar').innerText = "נוצר סיפור חדש בהצלחה";
+                    speak(`יצרנו סיפור חדש בנושא: ${data.active_story_name}`);
+                    loadConfig();
+                } else {
+                    alert("שגיאה ביצירת סיפור חדש: " + data.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("שגיאת שרת ביצירת הסיפור");
+            }
+        }
+
+        async function selectStory(storyId) {
+            document.getElementById('status-bar').innerText = "עובר סיפור...";
+            try {
+                const data = await callGAS("selectStory", { storyId: storyId });
+                if (data.status === 'success') {
+                    document.getElementById('active-story-name-span').innerText = data.active_story_name;
+                    document.getElementById('status-bar').innerText = `עברנו לעבוד על: ${data.active_story_name}`;
+                    document.getElementById('stories-dropdown').style.display = 'none';
+                    const arrow = document.getElementById('dropdown-arrow');
+                    if (arrow) arrow.style.transform = 'rotate(0deg)';
+                    loadConfig();
+                    speak(`עברנו לעבוד על הסיפור: ${data.active_story_name}`);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
         async function loadConfig() {
             if (!gasWebAppUrl) {
                 document.getElementById('status-bar').innerText = "אנא הגדר את כתובת ה-Web App של גוגל בהגדרות";
@@ -791,7 +890,7 @@
             try {
                 const data = await callGAS("getSettings");
                 userName = data.user_name || "אבא";
-                appVersion = data.version || "0.1.15";
+                appVersion = data.version || "0.1.17";
                 hasApiKey = data.has_api_key;
                 activeStoryUrl = data.active_story_url || "";
 
@@ -799,9 +898,9 @@
                 document.getElementById('app-version').innerText = `גרסה ${appVersion}`;
                 
                 if (data.active_story_name) {
-                    document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
+                    document.getElementById('active-story-name-span').innerText = data.active_story_name;
                 } else {
-                    document.getElementById('active-story-header').innerText = `אין סיפור פעיל`;
+                    document.getElementById('active-story-name-span').innerText = "אין סיפור פעיל";
                 }
                 
                 document.getElementById('status-bar').innerText = "מוכן לעבודה";
@@ -823,68 +922,22 @@
             try {
                 const data = await callGAS("getStories");
                 if (data.status === 'success') {
-                    const select = document.getElementById('active-story-select');
-                    select.innerHTML = '';
+                    const dropdownList = document.getElementById('stories-dropdown-list');
+                    dropdownList.innerHTML = '';
                     
                     data.stories.forEach(story => {
-                        const option = document.createElement('option');
-                        option.value = story.id;
-                        option.text = story.name;
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
                         if (story.id === data.active_story_id) {
-                            option.selected = true;
+                            item.className += ' active-story-item';
                         }
-                        select.appendChild(option);
+                        item.innerText = story.name;
+                        item.onclick = () => selectStory(story.id);
+                        dropdownList.appendChild(item);
                     });
                 }
             } catch (err) {
                 console.error(err);
-            }
-        }
-
-        async function onSelectStoryChange() {
-            const select = document.getElementById('active-story-select');
-            const selectedStoryId = select.value;
-            if (!selectedStoryId) return;
-            
-            document.getElementById('status-bar').innerText = "עובר סיפור...";
-            try {
-                const data = await callGAS("selectStory", { storyId: selectedStoryId });
-                if (data.status === 'success') {
-                    document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
-                    document.getElementById('status-bar').innerText = `עברנו לעבוד על: ${data.active_story_name}`;
-                    
-                    loadConfig();
-                    speak(`עברנו לעבוד על הסיפור: ${data.active_story_name}`);
-                }
-            } catch (err) {
-                console.error(err);
-            }
-        }
-
-        async function createNewStory() {
-            const input = document.getElementById('new-story-input');
-            const storyName = input.value.trim();
-            if (!storyName) {
-                alert("אנא הקלד נושא לסיפור החדש");
-                return;
-            }
-            
-            document.getElementById('status-bar').innerText = "יוצר סיפור חדש...";
-            try {
-                const data = await callGAS("createNewStory", { storyName: storyName });
-                if (data.status === 'success') {
-                    input.value = '';
-                    document.getElementById('active-story-header').innerText = `סיפור פעיל: ${data.active_story_name}`;
-                    document.getElementById('status-bar').innerText = "נוצר סיפור חדש בהצלחה";
-                    speak(`יצרנו סיפור חדש בנושא: ${data.active_story_name}`);
-                    
-                    loadConfig();
-                } else {
-                    alert("שגיאה ביצירת סיפור חדש: " + data.message);
-                }
-            } catch (err) {
-                console.error(err);
-                alert("שגיאת שרת ביצירת הסיפור");
             }
         }
 

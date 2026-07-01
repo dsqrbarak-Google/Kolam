@@ -120,7 +120,7 @@ function createNewStory(storyName) {
     
     // Add default title paragraph and format RTL
     var body = doc.getBody();
-    var p = body.appendParagraph("הביוגרפיה של " + (PropertiesService.getScriptProperties().getProperty('USER_NAME') || "אבא"));
+    var p = body.appendParagraph(storyName);
     p.setLeftToRight(false);
     p.setHeading(DocumentApp.ParagraphHeading.TITLE);
     
@@ -165,7 +165,7 @@ function getSettings() {
     masked_key: apiKey ? (apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length - 4)) : "",
     active_story_name: activeStoryName,
     active_story_url: activeStoryUrl,
-    version: "0.1.15"
+    version: "0.1.17"
   };
 }
 
@@ -195,12 +195,27 @@ function getLastParagraphs() {
     var body = doc.getBody();
     var paragraphs = body.getParagraphs();
     
+    var activeStoryName = "";
+    if (activeStoryId) {
+      try {
+        var activeFile = DriveApp.getFileById(activeStoryId);
+        activeStoryName = activeFile.getName();
+      } catch (e) {}
+    }
+
     var validParagraphs = [];
+    var isFirstNonEmpty = true;
     for (var i = 0; i < paragraphs.length; i++) {
       var text = paragraphs[i].getText().trim();
       // Skip title or empty paragraphs
-      if (text && !text.startsWith("הביוגרפיה של")) {
-        validParagraphs.push(text);
+      if (text) {
+        if (isFirstNonEmpty) {
+          isFirstNonEmpty = false;
+          continue;
+        }
+        if (text !== activeStoryName && !text.startsWith("הביוגרפיה של")) {
+          validParagraphs.push(text);
+        }
       }
     }
     
