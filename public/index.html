@@ -19,7 +19,7 @@
 
     <!-- Mammoth.js for DOCX Import and docx.js for DOCX Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
-    <script src="https://unpkg.com/docx@8.2.4/build/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 
     <style>
         :root {
@@ -513,7 +513,7 @@
         <header>
             <div class="logo-section">
                 <h1 class="logo-title">קולם</h1>
-                <div class="version-badge" id="app-version">גרסה 0.1.22</div>
+                <div class="version-badge" id="app-version">גרסה 0.2.23</div>
             </div>
             <div style="display: flex; align-items: center; gap: 30px;">
                 <div class="active-story-container" style="position: relative; direction: rtl;">
@@ -537,6 +537,10 @@
                         <div class="dropdown-item import-docx-item" onclick="triggerDocxUpload()" style="padding: 16px 24px; font-size: 32px; color: var(--text-primary); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
                             <span>📤</span>
                             <span>העלה סיפור מקובץ Word (DOCX)</span>
+                        </div>
+                        <div class="dropdown-item delete-story-item" onclick="openDeleteStoryModal()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-red); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
+                            <span>❌</span>
+                            <span>מחיקת סיפור פעיל...</span>
                         </div>
                         <div class="dropdown-item new-story-item" onclick="openNewStoryModal()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-yellow); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
                             <span>➕</span>
@@ -597,6 +601,28 @@
                 <div class="modal-actions">
                     <button onclick="submitNewStory()" class="btn-modal btn-save">צור סיפור</button>
                     <button onclick="closeNewStoryModal()" class="btn-modal btn-cancel">ביטול</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Story Modal -->
+        <div id="delete-story-modal" class="modal-overlay" style="z-index: 1010;">
+            <div class="modal-content">
+                <h2 class="modal-title" style="color: var(--accent-red); border-color: var(--accent-red); font-size: 30px;">⚠️ מחיקת סיפור פעיל</h2>
+                <div style="text-align: right; margin-bottom: 25px; direction: rtl;">
+                    <p style="font-size: 24px; line-height: 1.6; margin-bottom: 15px; color: var(--text-primary);">
+                        האם אתה בטוח שברצונך למחוק את הסיפור: <strong id="delete-story-name-label" style="color: var(--accent-yellow);"></strong>?
+                    </p>
+                    <p style="font-size: 20px; line-height: 1.5; margin-bottom: 20px; color: var(--text-secondary);">
+                        פעולה זו היא סופית ובלתי הפיכה. כדי למנוע מחיקה בטעות, אנא הקלד את השם המדויק של הסיפור בתיבה למטה כדי לאשר:
+                    </p>
+                    <div class="form-group">
+                        <input type="text" id="delete-story-confirm-input" class="form-input" placeholder="הקלד כאן את שם הסיפור המדויק" style="border-color: var(--accent-red); font-size: 24px; padding: 15px;">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button onclick="confirmDeleteStory()" class="btn-modal" style="background-color: var(--accent-red); color: white; font-size: 24px;">מחק לצמיתות</button>
+                    <button onclick="closeDeleteStoryModal()" class="btn-modal btn-cancel" style="font-size: 24px;">ביטול</button>
                 </div>
             </div>
         </div>
@@ -811,7 +837,7 @@
         let userName = "אבא";
         let geminiApiKey = "";
         let activeStoryId = "";
-        let appVersion = "0.1.22";
+        let appVersion = "0.2.23";
         
         let isVoiceLoading = false;
         let recordedBlob = null;
@@ -1664,6 +1690,82 @@
                 console.error(err);
                 document.getElementById('status-bar').innerText = "שגיאה ביצירת קובץ Word";
                 alert("שגיאה בהורדת הקובץ: " + err.message);
+            }
+        }
+
+        // Delete Active Story Dialog Management
+        async function openDeleteStoryModal() {
+            if (!currentUser || !activeStoryId) {
+                alert("אין סיפור פעיל למחיקה");
+                return;
+            }
+            
+            document.getElementById('stories-dropdown').style.display = 'none';
+            const arrow = document.getElementById('dropdown-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            
+            document.getElementById('status-bar').innerText = "מכין מחיקת סיפור...";
+            try {
+                const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).get();
+                if (storyDoc.exists) {
+                    const storyName = storyDoc.data().name || "סיפור ללא שם";
+                    document.getElementById('delete-story-name-label').innerText = storyName;
+                    document.getElementById('delete-story-confirm-input').value = "";
+                    document.getElementById('delete-story-modal').style.display = 'flex';
+                    document.getElementById('status-bar').innerText = "ממתין לאישור מחיקה";
+                    
+                    setTimeout(() => {
+                        document.getElementById('delete-story-confirm-input').focus();
+                    }, 100);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("שגיאה בגישה לסיפור");
+            }
+        }
+
+        function closeDeleteStoryModal() {
+            document.getElementById('delete-story-modal').style.display = 'none';
+            document.getElementById('status-bar').innerText = "מוכן לעבודה";
+        }
+
+        async function confirmDeleteStory() {
+            if (!currentUser || !activeStoryId) return;
+            
+            const confirmInput = document.getElementById('delete-story-confirm-input').value.trim();
+            const targetStoryName = document.getElementById('delete-story-name-label').innerText.trim();
+            
+            if (confirmInput !== targetStoryName) {
+                alert(`שם הסיפור שהוקלד אינו תואם בדיוק. אנא הקלד: "${targetStoryName}"`);
+                return;
+            }
+            
+            document.getElementById('status-bar').innerText = "מוחק את הסיפור מהענן...";
+            try {
+                // 1. Delete story document
+                await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).delete();
+                
+                // 2. Select another story
+                const snapshot = await db.collection('users').doc(currentUser.uid).collection('stories')
+                                   .orderBy('updatedAt', 'desc').limit(1).get();
+                
+                let nextActiveId = "";
+                if (!snapshot.empty) {
+                    nextActiveId = snapshot.docs[0].id;
+                }
+                
+                // 3. Update user config doc
+                await db.collection('users').doc(currentUser.uid).set({
+                    activeStoryId: nextActiveId
+                }, { merge: true });
+                
+                closeDeleteStoryModal();
+                document.getElementById('status-bar').innerText = "הסיפור נמחק בהצלחה";
+                speak("הסיפור נמחק בהצלחה");
+                loadConfig();
+            } catch (err) {
+                console.error(err);
+                alert("שגיאה במחיקת הסיפור מהענן");
             }
         }
     </script>
