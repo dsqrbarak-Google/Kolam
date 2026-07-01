@@ -511,9 +511,10 @@
     <!-- App Container -->
     <div id="app-container" style="display: none; flex-direction: column; min-height: 100vh;">
         <header>
-            <div class="logo-section">
-                <h1 class="logo-title">קולם</h1>
-                <div class="version-badge" id="app-version">גרסה 0.2.24</div>
+            <div class="logo-section" style="display: flex; align-items: center; gap: 15px;">
+                <img src="logo.png" alt="קולם" style="width: 55px; height: 55px; object-fit: cover; object-position: top; border-radius: 50%; border: 2px solid var(--accent-yellow); background-color: #f7f5ee; box-shadow: 0 0 10px rgba(245,176,65,0.2);">
+                <h1 class="logo-title" style="margin-right: 5px;">קולם</h1>
+                <div class="version-badge" id="app-version">גרסה 0.2.25</div>
             </div>
             <div style="display: flex; align-items: center; gap: 30px;">
                 <div class="active-story-container" style="position: relative; direction: rtl;">
@@ -837,7 +838,7 @@
         let userName = "אבא";
         let geminiApiKey = "";
         let activeStoryId = "";
-        let appVersion = "0.2.24";
+        let appVersion = "0.2.25";
         
         let isVoiceLoading = false;
         let recordedBlob = null;
@@ -873,6 +874,27 @@
 
         // Init Speech Synthesis greeting
         window.addEventListener('DOMContentLoaded', () => {
+            // Dynamic Favicon Generator from logo.png
+            const faviconImg = new Image();
+            faviconImg.src = 'logo.png';
+            faviconImg.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                // Crop the top 200x200 square containing the circle logo
+                ctx.drawImage(faviconImg, 0, 0, 200, 200, 0, 0, 64, 64);
+                
+                let link = document.querySelector("link[rel~='icon']");
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    link.type = 'image/png';
+                    document.getElementsByTagName('head')[0].appendChild(link);
+                }
+                link.href = canvas.toDataURL('image/png');
+            };
+
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
                 window.speechSynthesis.onvoiceschanged = () => {
                     if (!isVoiceLoading && currentUser) {
