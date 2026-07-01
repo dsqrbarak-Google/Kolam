@@ -638,7 +638,7 @@
                     </div>
                 </div>
                 <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0;">
-                    <textarea id="editor-textarea" style="flex: 1; width: 100%; padding: 25px; font-size: 34px; line-height: 1.6; border-radius: 15px; border: 2px solid #2c3540; background-color: var(--bg-color); color: var(--text-primary); outline: none; resize: none; direction: rtl; text-align: right; font-family: 'Rubik', sans-serif; overflow-y: auto;" placeholder="התחל להקליד או לערוך כאן..."></textarea>
+                    <textarea id="editor-textarea" dir="rtl" style="flex: 1; width: 100%; padding: 25px; font-size: 34px; line-height: 1.6; border-radius: 15px; border: 2px solid #2c3540; background-color: var(--bg-color); color: var(--text-primary); outline: none; resize: none; direction: rtl; text-align: right; font-family: 'Rubik', sans-serif; overflow-y: auto;" placeholder="התחל להקליד או לערוך כאן..."></textarea>
                 </div>
             </div>
         </div>
@@ -1642,11 +1642,16 @@
                 
                 // Add Title
                 docChildren.push(new Paragraph({
-                    text: storyName,
                     heading: HeadingLevel.TITLE,
                     bidirectional: true,
                     alignment: AlignmentType.RIGHT,
-                    spacing: { after: 300 }
+                    spacing: { after: 300 },
+                    children: [
+                        new TextRun({
+                            text: storyName,
+                            rightToLeft: true
+                        })
+                    ]
                 }));
                 
                 // Add Body paragraphs
@@ -1660,7 +1665,8 @@
                                 new TextRun({
                                     text: pText,
                                     size: 28, // 14pt (represented in half-points)
-                                    font: "Arial"
+                                    font: "Arial",
+                                    rightToLeft: true
                                 })
                             ]
                         }));
