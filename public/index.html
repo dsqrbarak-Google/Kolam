@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>קולם - תיעוד ביוגרפיה קולית</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    
+    <!-- Google Fonts for premium Hebrew typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Rubik:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Firebase App and SDKs (compat version to match classic JS style) -->
+    <script src="/__/firebase/10.8.0/firebase-app-compat.js"></script>
+    <script src="/__/firebase/10.8.0/firebase-auth-compat.js"></script>
+    <script src="/__/firebase/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- Automatic initialization served by Firebase Hosting -->
+    <script src="/__/firebase/init.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: rgba(26, 37, 48, 0.6);
+            --accent-yellow: #f5b041;
+            --accent-blue: #3498db;
+            --accent-red: #ff4d4d;
+            --text-primary: #ffffff;
+            --text-secondary: #bdc3c7;
+            --font-size-giant: 38px;
+            --font-size-large: 28px;
+            --font-size-medium: 24px;
+            --font-size-small: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Rubik', 'Outfit', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 50%, #1a2530 0%, #0b0c10 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Login Screen Container */
+        #login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 50%, #1a2530 0%, #0b0c10 100%);
+            text-align: center;
+            padding: 20px;
+        }
+
+        #login-btn {
+            padding: 20px 40px;
+            font-size: 32px;
+            font-weight: bold;
+            background-color: white;
+            color: black;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+        }
+
+        #login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+        }
+
+        header {
+            padding: 20px 30px;
+            background-color: rgba(31, 40, 51, 0.5);
+            border-bottom: 2px solid #2f3e46;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-title {
+            font-size: var(--font-size-giant);
+            color: var(--accent-yellow);
+            text-shadow: 0 0 10px rgba(245, 176, 65, 0.3);
+        }
+
+        .user-greeting {
+            font-size: var(--font-size-large);
+            color: var(--text-primary);
+        }
+
+        .version-badge {
+            font-size: 20px;
+            background-color: #2c3e50;
+            padding: 5px 15px;
+            border-radius: 20px;
+            color: var(--text-secondary);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            padding: 30px;
+            gap: 30px;
+            align-items: stretch;
+            justify-content: center;
+            max-width: 1500px;
+            width: 100%;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+
+        .action-column {
+            flex: 1.2;
+            display: flex;
+            gap: 30px;
+            align-items: center;
+            justify-content: center;
+            min-width: 320px;
+        }
+
+        .card {
+            flex: 1;
+            height: 100%;
+            min-height: 400px;
+            max-height: 500px;
+            max-width: 450px;
+            background-color: var(--card-bg);
+            border: 4px solid #2c3540;
+            border-radius: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-align: center;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+
+        .card.recording {
+            border-color: var(--accent-red);
+            animation: pulse-red 1.5s infinite;
+            background-color: #2b1111;
+        }
+
+        .card.listening {
+            border-color: var(--accent-blue);
+            animation: pulse-blue 1.5s infinite;
+            background-color: #111a2b;
+        }
+
+        .card.loading {
+            border-color: var(--accent-yellow);
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .icon-container {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+        }
+
+        .record-card .icon-container {
+            background-color: rgba(255, 77, 77, 0.15);
+            border: 8px solid var(--accent-red);
+        }
+        
+        .record-card .icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--accent-red);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .record-card.recording .icon {
+            border-radius: 15%;
+            animation: record-pulse 1s infinite alternate;
+        }
+
+        .listen-card .icon-container {
+            background-color: rgba(77, 166, 255, 0.15);
+            border: 8px solid var(--accent-blue);
+        }
+
+        .listen-card .icon {
+            width: 70px;
+            height: 70px;
+            background-color: var(--accent-blue);
+            border-radius: 15%;
+            transition: all 0.3s ease;
+        }
+
+        .listen-card.listening .icon {
+            transform: scale(1.1);
+            background-color: var(--text-primary);
+        }
+
+        .card-title {
+            font-size: var(--font-size-giant);
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .card-subtitle {
+            font-size: var(--font-size-medium);
+            color: var(--text-secondary);
+            font-weight: normal;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid var(--accent-yellow);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        footer {
+            padding: 15px 30px;
+            background-color: #1a2530;
+            border-top: 2px solid #2f3e46;
+            text-align: center;
+            font-size: var(--font-size-medium);
+            color: var(--accent-yellow);
+        }
+
+        /* Modal styling */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: #1f2833;
+            border: 4px solid #2c3540;
+            border-radius: 25px;
+            width: 100%;
+            max-width: 650px;
+            padding: 35px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: var(--font-size-large);
+            color: var(--accent-yellow);
+            margin-bottom: 25px;
+            border-bottom: 2px solid #2c3540;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-size: 22px;
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 12px 18px;
+            font-size: 22px;
+            border-radius: 12px;
+            border: 2px solid #2c3540;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent-yellow);
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .btn-modal {
+            flex: 1;
+            padding: 15px;
+            font-size: var(--font-size-medium);
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-modal:hover {
+            opacity: 0.9;
+        }
+
+        .btn-save {
+            background-color: var(--accent-yellow);
+            color: black;
+        }
+
+        .btn-cancel {
+            background-color: #444;
+            color: white;
+        }
+
+        .btn-settings-header {
+            font-size: 22px;
+            font-weight: bold;
+            background-color: #2c3e50;
+            color: white;
+            border: 2px solid #34495e;
+            padding: 8px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-settings-header:hover {
+            background-color: #34495e;
+        }
+
+        #api-warning {
+            background-color: var(--accent-red);
+            color: white;
+            padding: 15px 30px;
+            font-size: 22px;
+            font-weight: bold;
+            display: none;
+            text-align: center;
+            position: relative;
+        }
+
+        #api-warning button {
+            background-color: white;
+            color: black;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 5px;
+            margin-right: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes record-pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(0.9); }
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.5); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 77, 77, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+        }
+
+        @keyframes pulse-blue {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.5); }
+            70% { box-shadow: 0 0 0 20px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+
+        /* Media queries for smaller mobile layouts */
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+                padding: 15px;
+            }
+            .action-column {
+                flex-direction: column;
+                width: 100%;
+            }
+            .card {
+                width: 100%;
+                max-width: 1000px;
+                min-height: 250px;
+                height: auto;
+            }
+            .icon-container {
+                width: 120px;
+                height: 120px;
+                margin-bottom: 15px;
+            }
+            .icon-container svg {
+                width: 40px;
+                height: 40px;
+            }
+            .card-title {
+                font-size: var(--font-size-large);
+            }
+        }
+
+        /* Custom Dropdown Styling */
+        #stories-dropdown {
+            min-width: 450px !important;
+            background-color: #1a2530 !important;
+        }
+
+        .dropdown-item {
+            padding: 16px 24px;
+            font-size: 32px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .dropdown-item:hover {
+            background-color: #2c3540;
+        }
+
+        .dropdown-item.active-story-item {
+            color: var(--accent-yellow);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Container -->
+    <div id="login-container">
+        <h1 style="font-size: 90px; font-weight: 900; color: var(--accent-yellow); margin-bottom: 10px; text-shadow: 0 0 30px rgba(245,176,65,0.4);">קולם</h1>
+        <p style="font-size: 34px; color: var(--text-secondary); margin-bottom: 60px; max-width: 600px; line-height: 1.6; padding: 0 20px;">תיעוד ביוגרפיה קולית לגיל השלישי בענן מאובטח ופשוט</p>
+        <button id="login-btn" onclick="loginWithGoogle()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" alt="Google" style="width: 42px; height: 42px;">
+            <span>התחברות באמצעות גוגל</span>
+        </button>
+    </div>
+
+    <!-- App Container -->
+    <div id="app-container" style="display: none; flex-direction: column; min-height: 100vh;">
+        <header>
+            <div class="logo-section">
+                <h1 class="logo-title">קולם</h1>
+                <div class="version-badge" id="app-version">גרסה 0.2.0</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 30px;">
+                <div class="active-story-container" style="position: relative; direction: rtl;">
+                    <div id="active-story-header" onclick="toggleStoriesDropdown(event)" style="font-size: 28px; font-weight: bold; color: var(--accent-yellow); background-color: rgba(241, 196, 15, 0.1); border: 2px solid rgba(241, 196, 15, 0.3); padding: 5px 20px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none;">
+                        <span>סיפור פעיל: <span id="active-story-name-span">טוען...</span></span>
+                        <span style="font-size: 18px; transition: transform 0.2s;" id="dropdown-arrow">▼</span>
+                    </div>
+                    <div id="stories-dropdown" style="display: none; position: absolute; top: 110%; right: 0; border: 3px solid var(--accent-yellow); border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; max-height: 400px; overflow-y: auto; padding: 10px 0; text-align: right;">
+                        <div id="stories-dropdown-list">
+                            <!-- Story options populated dynamically -->
+                        </div>
+                        <div style="border-top: 2px solid #2c3540; margin: 10px 0;"></div>
+                        <div class="dropdown-item edit-story-item" onclick="openEditor()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-blue); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px;">
+                            <span>📝</span>
+                            <span>פתח עורך טקסט לעריכה</span>
+                        </div>
+                        <div class="dropdown-item new-story-item" onclick="openNewStoryModal()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-yellow); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
+                            <span>➕</span>
+                            <span>סיפור חדש...</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="openSettings()" class="btn-settings-header">⚙️ הגדרות מערכת</button>
+                <div class="user-greeting" id="user-greeting">שלום, סבא</div>
+            </div>
+        </header>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">⚙️ הגדרות מערכת</h2>
+
+                <div class="form-group">
+                    <label class="form-label" for="username-input">שם המשתמש:</label>
+                    <input type="text" id="username-input" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="apikey-input">מפתח API של Gemini:</label>
+                    <input type="password" id="apikey-input" class="form-input" placeholder="הזן מפתח API המתחיל ב-AIzaSy">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="mic-select">בחירת מיקרופון (קלט שמע):</label>
+                    <select id="mic-select" class="form-select"></select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="speaker-select">בחירת רמקול (פלט שמע):</label>
+                    <select id="speaker-select" class="form-select"></select>
+                </div>
+                
+                <div style="border-top: 2px solid #2c3540; margin: 25px 0 15px 0; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 18px; color: var(--text-secondary);">מחובר לחשבון גוגל</span>
+                    <button onclick="logout()" class="btn-modal btn-cancel" style="max-width: 180px; padding: 10px; font-size: 20px;">🚪 התנתק</button>
+                </div>
+
+                <div class="modal-actions">
+                    <button onclick="saveSettings()" class="btn-modal btn-save">שמור שינויים</button>
+                    <button onclick="closeSettings()" class="btn-modal btn-cancel">ביטול</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Story Modal -->
+        <div id="new-story-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">📝 יצירת סיפור חדש</h2>
+                <div class="form-group">
+                    <label class="form-label" for="new-story-modal-input">שם הסיפור החדש:</label>
+                    <input type="text" id="new-story-modal-input" class="form-input" placeholder="לדוגמה: ילדות בירושלים">
+                </div>
+                <div class="modal-actions">
+                    <button onclick="submitNewStory()" class="btn-modal btn-save">צור סיפור</button>
+                    <button onclick="closeNewStoryModal()" class="btn-modal btn-cancel">ביטול</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inline Text Editor Modal -->
+        <div id="editor-modal" class="modal-overlay" style="z-index: 1005;">
+            <div class="modal-content" style="max-width: 95%; width: 1300px; height: 90vh; display: flex; flex-direction: column; padding: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #2c3540; padding-bottom: 15px; margin-bottom: 20px;">
+                    <h2 class="modal-title" style="margin: 0; border: none; padding: 0; font-size: 32px;" id="editor-title-heading">📝 עריכת סיפור</h2>
+                    <div style="display: flex; gap: 20px;">
+                        <button onclick="saveStoryText()" class="btn-modal btn-save" style="padding: 10px 35px; font-size: 24px; flex: none;">💾 שמור שינויים</button>
+                        <button onclick="closeEditor()" class="btn-modal btn-cancel" style="padding: 10px 35px; font-size: 24px; flex: none;">ביטול</button>
+                    </div>
+                </div>
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-height: 0;">
+                    <textarea id="editor-textarea" style="flex: 1; width: 100%; padding: 25px; font-size: 34px; line-height: 1.6; border-radius: 15px; border: 2px solid #2c3540; background-color: var(--bg-color); color: var(--text-primary); outline: none; resize: none; direction: rtl; text-align: right; font-family: 'Rubik', sans-serif; overflow-y: auto;" placeholder="התחל להקליד או לערוך כאן..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div id="api-warning">
+            <div id="warning-text">שגיאה: מפתח ה-API של Gemini לא הוגדר.</div>
+            <button onclick="closeWarning()">הבנתי</button>
+        </div>
+
+        <main>
+            <!-- Main Interface (Only Action buttons) -->
+            <div id="main-interface" style="display: flex; gap: 40px; width: 100%; align-items: stretch; justify-content: center; flex-wrap: wrap;">
+                <div class="action-column" style="flex: 1; width: 100%; max-width: 1000px;">
+                    <!-- Record Button (Red Circle) -->
+                    <div class="card record-card" id="record-btn" onclick="toggleRecording()">
+                        <div class="icon-container" id="record-icon-container">
+                            <div class="icon" id="record-icon"></div>
+                        </div>
+                        <div class="card-title" id="record-title">להקליט סיפור</div>
+                        <div class="card-subtitle" id="record-subtitle">לחץ כדי להתחיל לדבר</div>
+                    </div>
+
+                    <!-- Listen Button (Blue Square) -->
+                    <div class="card listen-card" id="listen-btn" onclick="toggleListening()">
+                        <div class="icon-container" id="listen-icon-container">
+                            <div class="icon" id="listen-icon"></div>
+                        </div>
+                        <div class="card-title" id="listen-title">להקשיב לסיפור</div>
+                        <div class="card-subtitle" id="listen-subtitle">לחץ כדי לשמוע מה שכתבנו</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approval Screen (Hidden by Default, full size inside main) -->
+            <div id="approval-screen" style="display: none; flex-direction: column; align-items: center; justify-content: center; gap: 30px; width: 100%; max-width: 1000px; height: 100%; text-align: center; margin: 0 auto;">
+                <div style="font-size: var(--font-size-giant); color: var(--accent-yellow); margin-bottom: 10px;">הקלטה הושלמה!</div>
+                <div style="font-size: var(--font-size-medium); color: var(--text-secondary); margin-bottom: 20px;">משמיע כעת את ההקלטה שלך. האם ברצונך לשמור אותה?</div>
+                
+                <div style="display: flex; gap: 40px; width: 100%; justify-content: center; flex-wrap: wrap;">
+                    <!-- Save and Continue (Giant Green Card) -->
+                    <div class="card" id="btn-approve-save" onclick="approveSave()" style="border-color: #2ecc71; background-color: #0e2f1d; max-height: 400px; max-width: 450px; min-width: 280px; min-height: 250px;">
+                        <div class="icon-container" style="background-color: rgba(46, 204, 113, 0.15); border: 8px solid #2ecc71; width: 140px; height: 140px; margin-bottom: 20px;">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#2ecc71" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </div>
+                        <div class="card-title" style="font-size: 34px;">שמור והמשך</div>
+                        <div class="card-subtitle" style="font-size: 20px; color: #a3e4d7;">העלה ועבד את הטקסט לענן</div>
+                    </div>
+
+                    <!-- Discard and Re-record (Giant Red Card) -->
+                    <div class="card" id="btn-approve-discard" onclick="approveDiscard()" style="border-color: var(--accent-red); background-color: #2b1111; max-height: 400px; max-width: 450px; min-width: 280px; min-height: 250px;">
+                        <div class="icon-container" style="background-color: rgba(255, 77, 77, 0.15); border: 8px solid var(--accent-red); width: 140px; height: 140px; margin-bottom: 20px;">
+                            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--accent-red)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </div>
+                        <div class="card-title" style="font-size: 34px;">מחיקה</div>
+                        <div class="card-subtitle" style="font-size: 20px; color: #f2d7d5;">מחק הקלטה זו ונסה שוב</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer id="status-bar">
+            טוען הגדרות...
+        </footer>
+    </div>
+
+    <!-- Pure JS WAV Recording Module -->
+    <script>
+        class WavRecorder {
+            constructor() {
+                this.audioContext = null;
+                this.mediaStream = null;
+                this.audioInput = null;
+                this.jsNode = null;
+                this.leftchannel = [];
+                this.recordingLength = 0;
+                this.sampleRate = 44100;
+                this.bufferSize = 2048;
+            }
+
+            async start(deviceId = null) {
+                this.leftchannel = [];
+                this.recordingLength = 0;
+
+                const constraints = {
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                };
+
+                if (deviceId && deviceId !== "undefined" && deviceId !== "null" && deviceId !== "") {
+                    constraints.audio.deviceId = { exact: deviceId };
+                }
+
+                this.mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+                
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                this.audioContext = new AudioContextClass();
+                this.sampleRate = this.audioContext.sampleRate;
+
+                this.audioInput = this.audioContext.createMediaStreamSource(this.mediaStream);
+                
+                const bufferSize = this.bufferSize;
+                this.jsNode = this.audioContext.createScriptProcessor(bufferSize, 1, 1);
+
+                this.jsNode.onaudioprocess = (e) => {
+                    const left = e.inputBuffer.getChannelData(0);
+                    this.leftchannel.push(new Float32Array(left));
+                    this.recordingLength += bufferSize;
+                };
+
+                this.audioInput.connect(this.jsNode);
+                this.jsNode.connect(this.audioContext.destination);
+            }
+
+            stop() {
+                if (this.jsNode) {
+                    this.jsNode.disconnect();
+                    this.jsNode.onaudioprocess = null;
+                }
+                if (this.audioInput) {
+                    this.audioInput.disconnect();
+                }
+                if (this.audioContext) {
+                    this.audioContext.close();
+                }
+                if (this.mediaStream) {
+                    this.mediaStream.getTracks().forEach(track => track.stop());
+                }
+
+                const samples = this.flattenArray(this.leftchannel, this.recordingLength);
+                const wavBuffer = this.encodeWAV(samples);
+                return new Blob([wavBuffer], { type: 'audio/wav' });
+            }
+
+            flattenArray(channelBuffer, recordingLength) {
+                const result = new Float32Array(recordingLength);
+                let offset = 0;
+                for (let i = 0; i < channelBuffer.length; i++) {
+                    const buffer = channelBuffer[i];
+                    result.set(buffer, offset);
+                    offset += buffer.length;
+                }
+                return result;
+            }
+
+            encodeWAV(samples) {
+                const buffer = new ArrayBuffer(44 + samples.length * 2);
+                const view = new DataView(buffer);
+
+                this.writeString(view, 0, 'RIFF');
+                view.setUint32(4, 36 + samples.length * 2, true);
+                this.writeString(view, 8, 'WAVE');
+                this.writeString(view, 12, 'fmt ');
+                view.setUint32(16, 16, true);
+                view.setUint16(20, 1, true);
+                view.setUint16(22, 1, true);
+                view.setUint32(24, this.sampleRate, true);
+                view.setUint32(28, this.sampleRate * 2, true);
+                view.setUint16(32, 2, true);
+                view.setUint16(34, 16, true);
+                this.writeString(view, 36, 'data');
+                view.setUint32(40, samples.length * 2, true);
+
+                this.floatTo16BitPCM(view, 44, samples);
+                return buffer;
+            }
+
+            floatTo16BitPCM(output, offset, input) {
+                for (let i = 0; i < input.length; i++, offset += 2) {
+                    let s = Math.max(-1, Math.min(1, input[i]));
+                    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+            }
+
+            writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+        }
+    </script>
+
+    <!-- App Controller -->
+    <script>
+        const recorder = new WavRecorder();
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        
+        let isRecording = false;
+        let isListening = false;
+        
+        // App State
+        let currentUser = null;
+        let userName = "אבא";
+        let geminiApiKey = "";
+        let activeStoryId = "";
+        let appVersion = "0.2.0";
+        
+        let isVoiceLoading = false;
+        let recordedBlob = null;
+        let currentAudioPlayback = null;
+
+        // Auth State Observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('app-container').style.display = 'flex';
+                loadConfig();
+            } else {
+                currentUser = null;
+                document.getElementById('app-container').style.display = 'none';
+                document.getElementById('login-container').style.display = 'flex';
+                window.speechSynthesis.cancel();
+            }
+        });
+
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(err => {
+                console.error("Login failed:", err);
+                alert("התחברות נכשלה: " + err.message);
+            });
+        }
+
+        function logout() {
+            auth.signOut();
+            closeSettings();
+        }
+
+        // Init Speech Synthesis greeting
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = () => {
+                    if (!isVoiceLoading && currentUser) {
+                        isVoiceLoading = true;
+                        speakGreeting();
+                    }
+                };
+            } else if (currentUser) {
+                speakGreeting();
+            }
+        });
+
+        function speakGreeting() {
+            setTimeout(() => {
+                speak("שלום, כאן קולם. מה תרצה לעשות היום?");
+            }, 800);
+        }
+
+        // Dropdown toggle
+        function toggleStoriesDropdown(event) {
+            if (event) event.stopPropagation();
+            const dropdown = document.getElementById('stories-dropdown');
+            const arrow = document.getElementById('dropdown-arrow');
+            if (dropdown.style.display === 'none' || !dropdown.style.display) {
+                dropdown.style.display = 'block';
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
+            } else {
+                dropdown.style.display = 'none';
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('stories-dropdown');
+            const header = document.getElementById('active-story-header');
+            const arrow = document.getElementById('dropdown-arrow');
+            if (dropdown && dropdown.style.display === 'block') {
+                if (!dropdown.contains(e.target) && !header.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                    if (arrow) arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+
+        function openNewStoryModal() {
+            document.getElementById('stories-dropdown').style.display = 'none';
+            const arrow = document.getElementById('dropdown-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            document.getElementById('new-story-modal-input').value = '';
+            document.getElementById('new-story-modal').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('new-story-modal-input').focus();
+            }, 100);
+        }
+
+        function closeNewStoryModal() {
+            document.getElementById('new-story-modal').style.display = 'none';
+        }
+
+        async function submitNewStory() {
+            if (!currentUser) return;
+            const input = document.getElementById('new-story-modal-input');
+            const storyName = input.value.trim();
+            if (!storyName) {
+                alert("אנא הקלד נושא לסיפור החדש");
+                return;
+            }
+            
+            document.getElementById('status-bar').innerText = "יוצר סיפור חדש...";
+            try {
+                // Create new story in subcollection
+                const storyRef = await db.collection('users').doc(currentUser.uid).collection('stories').add({
+                    name: storyName,
+                    text: "",
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // Update active story in user profile
+                await db.collection('users').doc(currentUser.uid).set({
+                    activeStoryId: storyRef.id
+                }, { merge: true });
+
+                closeNewStoryModal();
+                document.getElementById('status-bar').innerText = "נוצר סיפור חדש בהצלחה";
+                speak(`יצרנו סיפור חדש בנושא: ${storyName}`);
+                loadConfig();
+            } catch (err) {
+                console.error(err);
+                alert("שגיאה ביצירת הסיפור: " + err.message);
+            }
+        }
+
+        async function selectStory(storyId) {
+            if (!currentUser) return;
+            document.getElementById('status-bar').innerText = "עובר סיפור...";
+            try {
+                await db.collection('users').doc(currentUser.uid).set({
+                    activeStoryId: storyId
+                }, { merge: true });
+                
+                document.getElementById('stories-dropdown').style.display = 'none';
+                const arrow = document.getElementById('dropdown-arrow');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+                
+                // Fetch story name for TTS greeting
+                const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(storyId).get();
+                const storyName = storyDoc.exists ? storyDoc.data().name : "סיפור חדש";
+                
+                loadConfig();
+                speak(`עברנו לעבוד על הסיפור: ${storyName}`);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadConfig() {
+            if (!currentUser) return;
+            
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                let userSettings = { userName: "אבא", geminiApiKey: "", activeStoryId: "" };
+                
+                if (userDoc.exists) {
+                    userSettings = { ...userSettings, ...userDoc.data() };
+                } else {
+                    // Create default user profile doc
+                    await db.collection('users').doc(currentUser.uid).set(userSettings);
+                }
+                
+                userName = userSettings.userName || "אבא";
+                geminiApiKey = userSettings.geminiApiKey || "";
+                activeStoryId = userSettings.activeStoryId || "";
+                
+                document.getElementById('user-greeting').innerText = `שלום, ${userName}`;
+                document.getElementById('app-version').innerText = `גרסה ${appVersion}`;
+                
+                if (activeStoryId) {
+                    const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).get();
+                    if (storyDoc.exists) {
+                        const storyData = storyDoc.data();
+                        document.getElementById('active-story-name-span').innerText = storyData.name;
+                    } else {
+                        document.getElementById('active-story-name-span').innerText = "אין סיפור פעיל";
+                    }
+                } else {
+                    document.getElementById('active-story-name-span').innerText = "אין סיפור פעיל";
+                }
+                
+                document.getElementById('status-bar').innerText = "מוכן לעבודה";
+
+                if (!geminiApiKey) {
+                    showWarning("מפתח ה-API של Gemini לא הוגדר. אנא פתח את מסך ההגדרות והזן מפתח.");
+                } else {
+                    closeWarning();
+                }
+                
+                loadStoriesList();
+            } catch (err) {
+                console.error(err);
+                document.getElementById('status-bar').innerText = "שגיאה בטעינת ההגדרות מהשרת";
+            }
+        }
+
+        async function loadStoriesList() {
+            if (!currentUser) return;
+            try {
+                const snapshot = await db.collection('users').doc(currentUser.uid).collection('stories')
+                                   .orderBy('updatedAt', 'desc').get();
+                                   
+                const dropdownList = document.getElementById('stories-dropdown-list');
+                dropdownList.innerHTML = '';
+                
+                snapshot.forEach(doc => {
+                    const story = doc.data();
+                    const storyId = doc.id;
+                    
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    if (storyId === activeStoryId) {
+                        item.className += ' active-story-item';
+                        item.style.color = 'var(--accent-yellow)';
+                        item.style.fontWeight = 'bold';
+                    } else {
+                        item.style.color = 'var(--text-primary)';
+                    }
+                    
+                    item.style.padding = '16px 24px';
+                    item.style.fontSize = '32px';
+                    item.style.cursor = 'pointer';
+                    item.style.textAlign = 'right';
+                    item.style.transition = 'background 0.2s';
+                    
+                    item.onmouseenter = () => { item.style.backgroundColor = '#2c3540'; };
+                    item.onmouseleave = () => { item.style.backgroundColor = 'transparent'; };
+                    
+                    item.innerText = story.name;
+                    item.onclick = () => selectStory(storyId);
+                    dropdownList.appendChild(item);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Inline Text Editor Management
+        async function openEditor() {
+            if (!currentUser || !activeStoryId) {
+                alert("אין סיפור פעיל לעריכה");
+                return;
+            }
+            
+            document.getElementById('stories-dropdown').style.display = 'none';
+            const arrow = document.getElementById('dropdown-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            
+            document.getElementById('status-bar').innerText = "טוען סיפור לעריכה...";
+            try {
+                const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).get();
+                if (storyDoc.exists) {
+                    const storyData = storyDoc.data();
+                    document.getElementById('editor-title-heading').innerText = `📝 עריכת סיפור: ${storyData.name}`;
+                    document.getElementById('editor-textarea').value = storyData.text || "";
+                    document.getElementById('editor-modal').style.display = 'flex';
+                    document.getElementById('status-bar').innerText = "העורך פתוח";
+                    
+                    setTimeout(() => {
+                        document.getElementById('editor-textarea').focus();
+                    }, 100);
+                }
+            } catch (err) {
+                console.error(err);
+                alert("שגיאה בטעינת הקובץ לעריכה");
+            }
+        }
+
+        function closeEditor() {
+            document.getElementById('editor-modal').style.display = 'none';
+            document.getElementById('status-bar').innerText = "מוכן לעבודה";
+        }
+
+        async function saveStoryText() {
+            if (!currentUser || !activeStoryId) return;
+            const newText = document.getElementById('editor-textarea').value;
+            
+            document.getElementById('status-bar').innerText = "שומר שינויים...";
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).update({
+                    text: newText,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                closeEditor();
+                document.getElementById('status-bar').innerText = "השינויים נשמרו בהצלחה";
+                speak("השינויים נשמרו בהצלחה");
+                loadConfig();
+            } catch (err) {
+                console.error(err);
+                alert("שגיאה בשמירת השינויים");
+            }
+        }
+
+        // Speech Synthesis Wrapper
+        function speak(text, onEndCallback) {
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'he-IL';
+            utterance.rate = 0.82;
+            utterance.pitch = 1.0;
+
+            const voices = window.speechSynthesis.getVoices();
+            const heVoice = voices.find(v => v.lang.startsWith('he') && v.name.includes('Online'));
+            const fallbackHeVoice = voices.find(v => v.lang.startsWith('he'));
+            
+            if (heVoice) {
+                utterance.voice = heVoice;
+            } else if (fallbackHeVoice) {
+                utterance.voice = fallbackHeVoice;
+            }
+
+            if (onEndCallback) {
+                utterance.onend = onEndCallback;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function showWarning(text) {
+            document.getElementById('warning-text').innerText = text;
+            document.getElementById('api-warning').style.display = 'block';
+        }
+
+        function closeWarning() {
+            document.getElementById('api-warning').style.display = 'none';
+        }
+
+        // Toggle Recording logic
+        async function toggleRecording() {
+            if (isListening) {
+                stopListening();
+            }
+
+            const recordBtn = document.getElementById('record-btn');
+            const recordTitle = document.getElementById('record-title');
+            const recordSubtitle = document.getElementById('record-subtitle');
+            const status = document.getElementById('status-bar');
+
+            if (!isRecording) {
+                try {
+                    status.innerText = "מתחיל הקלטה...";
+                    speak("אני מקשיב", async () => {
+                        try {
+                            const selectedMic = localStorage.getItem('selectedMic') || null;
+                            await recorder.start(selectedMic);
+                            isRecording = true;
+                            recordBtn.classList.add('recording');
+                            recordTitle.innerText = "להפסיק להקליט";
+                            recordSubtitle.innerText = "אני מקשיב... לחץ כאן לסיום";
+                            status.innerText = "הקלטה פעילה... דבר בקול ברור";
+                        } catch (err) {
+                            console.error(err);
+                            status.innerText = "שגיאה בגישה למיקרופון: " + err.name + " - " + err.message;
+                            speak("שגיאה, לא הצלחתי לגשת למיקרופון");
+                        }
+                    });
+                } catch (err) {
+                    console.error(err);
+                }
+            } else {
+                isRecording = false;
+                recordBtn.classList.remove('recording');
+                
+                try {
+                    recordedBlob = recorder.stop();
+                    resetRecordButton();
+                    
+                    document.getElementById('main-interface').style.display = 'none';
+                    document.getElementById('approval-screen').style.display = 'flex';
+                    status.innerText = "הקלטה הושלמה. משמיע את קולך...";
+                    
+                    const audioUrl = URL.createObjectURL(recordedBlob);
+                    if (currentAudioPlayback) {
+                        currentAudioPlayback.pause();
+                    }
+                    currentAudioPlayback = new Audio(audioUrl);
+                    
+                    const selectedSpeaker = localStorage.getItem('selectedSpeaker');
+                    if (selectedSpeaker && typeof currentAudioPlayback.setSinkId === 'function') {
+                        currentAudioPlayback.setSinkId(selectedSpeaker).catch(err => {
+                            console.error("Error setting speaker output:", err);
+                        });
+                    }
+
+                    speak("הקלטה הושלמה. אנא הקשב ובחר האם לשמור או למחוק.", () => {
+                        if (currentAudioPlayback) {
+                            currentAudioPlayback.play();
+                        }
+                    });
+                    
+                    currentAudioPlayback.onended = () => {
+                        status.innerText = "ההשמעה הסתיימה. בחר האם לשמור או למחוק.";
+                    };
+                } catch (err) {
+                    console.error(err);
+                    status.innerText = "שגיאה בעיבוד ההקלטה";
+                    speak("שגיאה בעיבוד השמע");
+                    resetToMainScreen();
+                }
+            }
+        }
+
+        function resetToMainScreen() {
+            if (currentAudioPlayback) {
+                currentAudioPlayback.pause();
+                currentAudioPlayback = null;
+            }
+            document.getElementById('approval-screen').style.display = 'none';
+            document.getElementById('main-interface').style.display = 'flex';
+            document.getElementById('status-bar').innerText = "מוכן לעבודה";
+        }
+
+        function approveDiscard() {
+            speak("ההקלטה נמחקה");
+            recordedBlob = null;
+            resetToMainScreen();
+        }
+
+        async function approveSave() {
+            if (!recordedBlob || !currentUser) return;
+            
+            if (currentAudioPlayback) {
+                currentAudioPlayback.pause();
+            }
+            
+            if (!geminiApiKey) {
+                alert("מפתח ה-API של Gemini לא מוגדר. אנא פתח את ההגדרות והזן אותו.");
+                resetToMainScreen();
+                return;
+            }
+
+            const status = document.getElementById('status-bar');
+            status.innerText = "שומר סיפור ומעבד את השמע בענן...";
+            
+            document.getElementById('btn-approve-save').style.pointerEvents = 'none';
+            document.getElementById('btn-approve-discard').style.pointerEvents = 'none';
+            document.getElementById('btn-approve-save').style.opacity = '0.5';
+
+            // Convert Wav Blob to Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(recordedBlob);
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                
+                try {
+                    // Call Gemini API directly from Client
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+                    const promptText = "תמלל את השמע בעברית בצורה מדויקת ככל הניתן ומילה במילה (Verbatim). שמור על הניסוח, הסגנון המקורי וקולו של המספר. אל תשנה את המילים, אל תשכתב ספרותית ואל תוסיף דבר. הסר רק גמגומים או מילות קישור חוזרות כמו 'אממ' או 'אה'. פלוט אך ורק את הטקסט המתומלל ללא שום תוספת.";
+                    
+                    const payload = {
+                        "contents": [
+                            {
+                                "parts": [
+                                    {
+                                        "inlineData": {
+                                            "mimeType": "audio/wav",
+                                            "data": base64Data
+                                        }
+                                    },
+                                    {
+                                        "text": promptText
+                                    }
+                                ]
+                            }
+                        ],
+                        "generationConfig": {
+                            "temperature": 0.0
+                        }
+                    };
+
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    resetToApprovalButtons();
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        const errMsg = errData.error?.message || `קוד שגיאה ${response.status}`;
+                        throw new Error(errMsg);
+                    }
+
+                    const result = await response.json();
+                    if (!result.candidates || result.candidates.length === 0 || !result.candidates[0].content) {
+                        throw new Error("תשובת Gemini הייתה ריקה.");
+                    }
+
+                    const transcribedText = result.candidates[0].content.parts[0].text.trim();
+
+                    // If no active story, create a default one
+                    let targetStoryId = activeStoryId;
+                    if (!targetStoryId) {
+                        const storyRef = await db.collection('users').doc(currentUser.uid).collection('stories').add({
+                            name: "הביוגרפיה שלי",
+                            text: "",
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        targetStoryId = storyRef.id;
+                        await db.collection('users').doc(currentUser.uid).set({
+                            activeStoryId: targetStoryId
+                        }, { merge: true });
+                    }
+
+                    // Retrieve current story text and append
+                    const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(targetStoryId).get();
+                    let currentText = "";
+                    if (storyDoc.exists) {
+                        currentText = storyDoc.data().text || "";
+                    }
+
+                    // Clean initial empty lines and join
+                    const cleanText = currentText.trim();
+                    const newText = cleanText === "" ? transcribedText : `${cleanText}\n\n${transcribedText}`;
+
+                    // Update Firestore
+                    await db.collection('users').doc(currentUser.uid).collection('stories').doc(targetStoryId).update({
+                        text: newText,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    status.innerText = "הסיפור נשמר בהצלחה!";
+                    speak("נשמר בהצלחה", () => {
+                        recordedBlob = null;
+                        resetToMainScreen();
+                        loadConfig();
+                    });
+
+                } catch (err) {
+                    resetToApprovalButtons();
+                    console.error(err);
+                    status.innerText = "שגיאה בעיבוד השמע: " + err.message;
+                    speak("שגיאה בעליית השמע. נסה שוב.", () => {
+                        resetToMainScreen();
+                    });
+                }
+            };
+        }
+
+        function resetToApprovalButtons() {
+            document.getElementById('btn-approve-save').style.pointerEvents = 'auto';
+            document.getElementById('btn-approve-discard').style.pointerEvents = 'auto';
+            document.getElementById('btn-approve-save').style.opacity = '1';
+        }
+
+        function resetRecordButton() {
+            const recordBtn = document.getElementById('record-btn');
+            recordBtn.classList.remove('recording');
+            document.getElementById('record-icon-container').innerHTML = '<div class="icon" id="record-icon"></div>';
+            document.getElementById('record-title').innerText = "להקליט סיפור";
+            document.getElementById('record-subtitle').innerText = "לחץ כדי להתחיל לדבר";
+            document.getElementById('status-bar').innerText = "מוכן לעבודה";
+        }
+
+        // Toggle Listening (TTS) logic
+        async function toggleListening() {
+            if (isRecording || !currentUser || !activeStoryId) {
+                return;
+            }
+
+            const listenBtn = document.getElementById('listen-btn');
+            const listenTitle = document.getElementById('listen-title');
+            const listenSubtitle = document.getElementById('listen-subtitle');
+            const status = document.getElementById('status-bar');
+
+            if (!isListening) {
+                listenBtn.classList.add('loading');
+                status.innerText = "קורא את המסמך...";
+                
+                try {
+                    // Fetch last paragraphs directly from Firestore
+                    const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).get();
+                    listenBtn.classList.remove('loading');
+
+                    if (!storyDoc.exists || !storyDoc.data().text) {
+                        status.innerText = "אין עדיין סיפורים כתובים במסמך.";
+                        speak("המסמך עדיין ריק. לחץ על הכפתור האדום כדי להקליט את הסיפור הראשון שלך.");
+                        return;
+                    }
+
+                    const storyData = storyDoc.data();
+                    const text = storyData.text || "";
+                    const activeStoryName = storyData.name || "";
+
+                    const paragraphs = text.split('\n')
+                                           .map(p => p.trim())
+                                           .filter(p => p.length > 0);
+                    
+                    // Filter out header title if present
+                    const filteredParagraphs = paragraphs.filter(p => {
+                        const cleanP = p.replace(/[\*\#\_\-]/g, '').trim();
+                        if (cleanP === activeStoryName) return false;
+                        if (cleanP.startsWith("הביוגרפיה של")) return false;
+                        return true;
+                    });
+
+                    const last3 = filteredParagraphs.slice(-3);
+
+                    if (last3.length === 0) {
+                        status.innerText = "אין פסקאות מתאימות להקראה.";
+                        speak("המסמך עדיין ריק.");
+                        return;
+                    }
+
+                    isListening = true;
+                    listenBtn.classList.add('listening');
+                    listenTitle.innerText = "להפסיק להקשיב";
+                    listenSubtitle.innerText = "אני מקריא את מה שכתבנו...";
+                    status.innerText = "מקריא כעת את פסקאות הסיום של הסיפור שלך...";
+
+                    const textToRead = last3.join(". ");
+                    speak("אני מקריא את מה שכתבנו: " + textToRead, () => {
+                        stopListening();
+                    });
+
+                } catch (err) {
+                    console.error(err);
+                    listenBtn.classList.remove('loading');
+                    status.innerText = "שגיאה בחיבור לענן";
+                    speak("שגיאת תקשורת עם הענן.");
+                }
+            } else {
+                stopListening();
+            }
+        }
+
+        function stopListening() {
+            window.speechSynthesis.cancel();
+            isListening = false;
+            const listenBtn = document.getElementById('listen-btn');
+            listenBtn.classList.remove('listening');
+            document.getElementById('listen-title').innerText = "להקשיב לסיפור";
+            document.getElementById('listen-subtitle').innerText = "לחץ כדי לשמוע מה שכתבנו";
+            document.getElementById('status-bar').innerText = "מוכן לעבודה";
+        }
+
+        // Settings Dialog Management
+        async function openSettings() {
+            document.getElementById('username-input').value = userName;
+            document.getElementById('apikey-input').value = geminiApiKey ? "••••••••••••••••" : "";
+
+            const micSelect = document.getElementById('mic-select');
+            const speakerSelect = document.getElementById('speaker-select');
+            
+            micSelect.innerHTML = '<option value="">ברירת מחדל של המערכת</option>';
+            speakerSelect.innerHTML = '<option value="">ברירת מחדל של המערכת</option>';
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => navigator.mediaDevices.enumerateDevices())
+                .then(devices => {
+                    devices.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device.deviceId;
+                        
+                        if (device.kind === 'audioinput') {
+                            option.text = device.label || `מיקרופון ${device.deviceId.slice(0, 5)}`;
+                            micSelect.appendChild(option);
+                        } else if (device.kind === 'audiooutput') {
+                            option.text = device.label || `רמקול ${device.deviceId.slice(0, 5)}`;
+                            speakerSelect.appendChild(option);
+                        }
+                    });
+                    
+                    const savedMic = localStorage.getItem('selectedMic');
+                    const savedSpeaker = localStorage.getItem('selectedSpeaker');
+                    
+                    if (savedMic) micSelect.value = savedMic;
+                    if (savedSpeaker) speakerSelect.value = savedSpeaker;
+                })
+                .catch(err => {
+                    console.error("Error loading devices", err);
+                });
+            
+            document.getElementById('settings-modal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settings-modal').style.display = 'none';
+        }
+
+        async function saveSettings() {
+            if (!currentUser) return;
+            const newName = document.getElementById('username-input').value.trim();
+            let newKey = document.getElementById('apikey-input').value.trim();
+            const selectedMic = document.getElementById('mic-select').value;
+            const selectedSpeaker = document.getElementById('speaker-select').value;
+            
+            if (!newName) {
+                alert("אנא הזן שם משתמש תקין");
+                return;
+            }
+
+            localStorage.setItem('selectedMic', selectedMic);
+            localStorage.setItem('selectedSpeaker', selectedSpeaker);
+            
+            // If API key is still placeholder, do not overwrite
+            const payload = { userName: newName };
+            if (newKey && !newKey.includes("••")) {
+                payload.geminiApiKey = newKey;
+            }
+
+            try {
+                await db.collection('users').doc(currentUser.uid).set(payload, { merge: true });
+                loadConfig();
+                closeSettings();
+                speak("ההגדרות נשמרו בהצלחה");
+            } catch (err) {
+                console.error(err);
+                alert("שגיאה בשמירת ההגדרות בענן.");
+            }
+        }
+    </script>
+</body>
+</html>
