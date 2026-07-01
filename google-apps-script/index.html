@@ -496,7 +496,7 @@
     <header>
         <div class="logo-section">
             <h1 class="logo-title">קולם</h1>
-            <div class="version-badge" id="app-version">גרסה 0.1.20</div>
+            <div class="version-badge" id="app-version">גרסה 0.1.21</div>
         </div>
         <div style="display: flex; align-items: center; gap: 30px;">
             <div class="active-story-container" style="position: relative; direction: rtl;">
@@ -537,6 +537,11 @@
             <div class="form-group">
                 <label class="form-label" for="username-input">שם המשתמש:</label>
                 <input type="text" id="username-input" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="user-gmail-input">כתובת Gmail של אבא (לשיתוף עריכה בגוגל דוקס):</label>
+                <input type="email" id="user-gmail-input" class="form-input" placeholder="לדוגמה: father@gmail.com">
             </div>
 
             <div class="form-group">
@@ -762,7 +767,8 @@
         let isRecording = false;
         let isListening = false;
         let userName = "אבא";
-        let appVersion = "0.1.20";
+        let userGmail = "";
+        let appVersion = "0.1.21";
         let hasApiKey = false;
         let isVoiceLoading = false;
         let recordedBlob = null;
@@ -915,7 +921,8 @@
             try {
                 const data = await callGAS("getSettings");
                 userName = data.user_name || "אבא";
-                appVersion = data.version || "0.1.20";
+                userGmail = data.user_gmail || "";
+                appVersion = data.version || "0.1.21";
                 hasApiKey = data.has_api_key;
                 activeStoryUrl = data.active_story_url || "";
 
@@ -1240,6 +1247,7 @@
         // Settings Dialog Management
         async function openSettings() {
             document.getElementById('username-input').value = userName;
+            document.getElementById('user-gmail-input').value = userGmail;
             document.getElementById('gas-url-input').value = gasWebAppUrl;
             
             if (gasWebAppUrl) {
@@ -1249,6 +1257,9 @@
                         document.getElementById('apikey-input').value = "••••••••••••••••";
                     } else {
                         document.getElementById('apikey-input').value = "";
+                    }
+                    if (data.user_gmail) {
+                        document.getElementById('user-gmail-input').value = data.user_gmail;
                     }
                 } catch (e) {
                     console.error(e);
@@ -1296,6 +1307,7 @@
 
         async function saveSettings() {
             const newName = document.getElementById('username-input').value.trim();
+            const newGmail = document.getElementById('user-gmail-input').value.trim();
             let newKey = document.getElementById('apikey-input').value.trim();
             const newGasUrl = document.getElementById('gas-url-input').value.trim();
             const selectedMic = document.getElementById('mic-select').value;
@@ -1318,7 +1330,11 @@
             }
 
             try {
-                const response = await callGAS("saveSettings", { userName: newName, apiKey: newKey });
+                const response = await callGAS("saveSettings", { 
+                    userName: newName, 
+                    apiKey: newKey,
+                    userGmail: newGmail
+                });
                 if (response.status === 'success') {
                     loadConfig();
                     closeSettings();

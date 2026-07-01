@@ -22,7 +22,7 @@ function doPost(e) {
     } else if (action === "createNewStory") {
       response = createNewStory(requestData.storyName);
     } else if (action === "saveSettings") {
-      response = saveSettings(requestData.userName, requestData.apiKey);
+      response = saveSettings(requestData.userName, requestData.apiKey, requestData.userGmail);
     } else if (action === "getLastParagraphs") {
       response = getLastParagraphs();
     } else if (action === "transcribeAudio") {
@@ -130,6 +130,16 @@ function createNewStory(storyName) {
     folder.addFile(docFile);
     DriveApp.getRootFolder().removeFile(docFile); // Remove from root
     
+    // Auto-share with user's Gmail if configured
+    var userGmail = PropertiesService.getScriptProperties().getProperty('USER_GMAIL');
+    if (userGmail && userGmail.indexOf('@') !== -1) {
+      try {
+        docFile.addEditor(userGmail.trim().toLowerCase());
+      } catch (shareErr) {
+        console.error("Error sharing new document: " + shareErr.toString());
+      }
+    }
+    
     PropertiesService.getScriptProperties().setProperty('ACTIVE_DOC_ID', doc.getId());
     
     return {
@@ -148,6 +158,7 @@ function getSettings() {
   var apiKey = props.getProperty('GEMINI_API_KEY') || "";
   var userName = props.getProperty('USER_NAME') || "אבא";
   var activeStoryId = props.getProperty('ACTIVE_DOC_ID') || "";
+  var userGmail = props.getProperty('USER_GMAIL') || "";
   
   var activeStoryName = "";
   var activeStoryUrl = "";
@@ -161,22 +172,42 @@ function getSettings() {
   
   return {
     user_name: userName,
+    user_gmail: userGmail,
     has_api_key: apiKey.length > 0,
     masked_key: apiKey ? (apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length - 4)) : "",
     active_story_name: activeStoryName,
     active_story_url: activeStoryUrl,
-    version: "0.1.20"
+    version: "0.1.21"
   };
 }
 
 // Save settings
-function saveSettings(userName, apiKey) {
+function saveSettings(userName, apiKey, userGmail) {
   try {
     var props = PropertiesService.getScriptProperties();
     props.setProperty('USER_NAME', userName);
     if (apiKey && !apiKey.includes("...")) {
       props.setProperty('GEMINI_API_KEY', apiKey);
     }
+    
+    // Save Gmail and trigger sharing if changed
+    var oldGmail = props.getProperty('USER_GMAIL') || "";
+    userGmail = (userGmail || "").trim().toLowerCase();
+    props.setProperty('USER_GMAIL', userGmail);
+    
+    if (userGmail && userGmail.includes('@') && userGmail !== oldGmail) {
+      try {
+        var folder = getStoriesFolder();
+        var files = folder.getFiles();
+        while (files.hasNext()) {
+          var file = files.next();
+          file.addEditor(userGmail);
+        }
+      } catch (shareErr) {
+        console.error("Error auto-sharing existing documents: " + shareErr.toString());
+      }
+    }
+    
     return { status: "success" };
   } catch (err) {
     return { status: "error", message: err.toString() };
