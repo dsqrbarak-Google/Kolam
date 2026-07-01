@@ -495,7 +495,7 @@
     <header>
         <div class="logo-section">
             <h1 class="logo-title">קולם</h1>
-            <div class="version-badge" id="app-version">גרסה 0.1.18</div>
+            <div class="version-badge" id="app-version">גרסה 0.1.19</div>
         </div>
         <div style="display: flex; align-items: center; gap: 30px;">
             <div class="active-story-container" style="position: relative; direction: rtl;">
@@ -508,11 +508,11 @@
                         <!-- Story options populated dynamically -->
                     </div>
                     <div style="border-top: 2px solid #2c3540; margin: 10px 0;"></div>
-                    <div class="dropdown-item edit-story-item" onclick="openInGoogleDocs()" style="padding: 12px 20px; font-size: 24px; color: var(--accent-blue); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px;">
+                    <div class="dropdown-item edit-story-item" onclick="openInGoogleDocs()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-blue); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px;">
                         <span>📝</span>
                         <span>פתח במסמך גוגל (Docs)</span>
                     </div>
-                    <div class="dropdown-item new-story-item" onclick="openNewStoryModal()" style="padding: 12px 20px; font-size: 24px; color: var(--accent-yellow); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
+                    <div class="dropdown-item new-story-item" onclick="openNewStoryModal()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-yellow); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
                         <span>➕</span>
                         <span>סיפור חדש...</span>
                     </div>
@@ -761,7 +761,7 @@
         let isRecording = false;
         let isListening = false;
         let userName = "אבא";
-        let appVersion = "0.1.18";
+        let appVersion = "0.1.19";
         let hasApiKey = false;
         let isVoiceLoading = false;
         let recordedBlob = null;
@@ -914,7 +914,7 @@
             try {
                 const data = await callGAS("getSettings");
                 userName = data.user_name || "אבא";
-                appVersion = data.version || "0.1.18";
+                appVersion = data.version || "0.1.19";
                 hasApiKey = data.has_api_key;
                 activeStoryUrl = data.active_story_url || "";
 
@@ -954,7 +954,23 @@
                         item.className = 'dropdown-item';
                         if (story.id === data.active_story_id) {
                             item.className += ' active-story-item';
+                            item.style.color = 'var(--accent-yellow)';
+                            item.style.fontWeight = 'bold';
+                        } else {
+                            item.style.color = 'var(--text-primary)';
                         }
+                        
+                        // Inline styles for high accessibility and caching resilience
+                        item.style.padding = '16px 24px';
+                        item.style.fontSize = '32px';
+                        item.style.cursor = 'pointer';
+                        item.style.textAlign = 'right';
+                        item.style.transition = 'background 0.2s';
+                        
+                        // Hover effects
+                        item.onmouseenter = () => { item.style.backgroundColor = '#2c3540'; };
+                        item.onmouseleave = () => { item.style.backgroundColor = 'transparent'; };
+                        
                         item.innerText = story.name;
                         item.onclick = () => selectStory(story.id);
                         dropdownList.appendChild(item);
