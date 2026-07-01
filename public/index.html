@@ -17,6 +17,10 @@
     <!-- Automatic initialization served by Firebase Hosting -->
     <script src="/__/firebase/init.js"></script>
 
+    <!-- Mammoth.js for DOCX Import and docx.js for DOCX Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://unpkg.com/docx@8.2.4/build/index.js"></script>
+
     <style>
         :root {
             --bg-color: #0b0c10;
@@ -487,11 +491,21 @@
     <!-- Login Container -->
     <div id="login-container">
         <h1 style="font-size: 90px; font-weight: 900; color: var(--accent-yellow); margin-bottom: 10px; text-shadow: 0 0 30px rgba(245,176,65,0.4);">קולם</h1>
-        <p style="font-size: 34px; color: var(--text-secondary); margin-bottom: 60px; max-width: 600px; line-height: 1.6; padding: 0 20px;">תיעוד ביוגרפיה קולית לגיל השלישי בענן מאובטח ופשוט</p>
-        <button id="login-btn" onclick="loginWithGoogle()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" alt="Google" style="width: 42px; height: 42px;">
-            <span>התחברות באמצעות גוגל</span>
+        <p style="font-size: 34px; color: var(--text-secondary); margin-bottom: 60px; max-width: 600px; line-height: 1.6; padding: 0 20px;">תיעוד ביוגרפיה או סתם לספר סיפור...</p>
+        
+        <button id="login-btn" onclick="loginWithGoogle()" style="padding: 20px 40px; font-size: 32px; font-weight: bold; background-color: white; color: black; border: none; border-radius: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: all 0.2s ease; direction: ltr; margin: 0 auto;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" style="flex-shrink: 0;">
+                <path fill="#EA4335" d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.198 2.698 1.24 6.65l4.026 3.115Z"/>
+                <path fill="#4285F4" d="M16.04 15.345c-1.107.728-2.482 1.182-4.04 1.182a7.075 7.075 0 0 1-6.727-4.855l-4.025 3.116C3.2 18.73 7.27 21.43 12 21.43c2.955 0 5.618-1.01 7.627-2.736l-3.587-3.349Z"/>
+                <path fill="#FBBC05" d="M1.273 11.673a7.037 7.037 0 0 1 0-2.437l-4.025-3.116a11.968 11.968 0 0 0 0 8.67l4.025-3.117Z"/>
+                <path fill="#34A853" d="M23.491 10.027h-11.49v4.282h7.327c-.673 2.127-2.318 3.655-4.655 4.31l3.587 3.348c3.218-2.973 5.09-7.363 5.09-12.02c.001-.655-.054-1.29-.164-1.92Z"/>
+            </svg>
+            <span style="font-family: 'Rubik', sans-serif;">התחברות באמצעות גוגל</span>
         </button>
+
+        <p style="font-size: 22px; color: var(--text-secondary); margin-top: 40px; max-width: 600px; line-height: 1.5; font-weight: normal; margin-left: auto; margin-right: auto; padding: 0 20px;">
+            <strong>שימו לב:</strong> לאחר לחיצה על הכפתור הלבן למעלה, ייפתח חלון קופץ מאובטח של גוגל שבו עליכם לבחור את חשבון הגוגל (Gmail) שלכם ולאשר כניסה.
+        </p>
     </div>
 
     <!-- App Container -->
@@ -507,7 +521,7 @@
                         <span>סיפור פעיל: <span id="active-story-name-span">טוען...</span></span>
                         <span style="font-size: 18px; transition: transform 0.2s;" id="dropdown-arrow">▼</span>
                     </div>
-                    <div id="stories-dropdown" style="display: none; position: absolute; top: 110%; right: 0; border: 3px solid var(--accent-yellow); border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; max-height: 400px; overflow-y: auto; padding: 10px 0; text-align: right;">
+                    <div id="stories-dropdown" style="display: none; position: absolute; top: 110%; right: 0; border: 3px solid var(--accent-yellow); border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; max-height: 550px; overflow-y: auto; padding: 10px 0; text-align: right;">
                         <div id="stories-dropdown-list">
                             <!-- Story options populated dynamically -->
                         </div>
@@ -515,6 +529,14 @@
                         <div class="dropdown-item edit-story-item" onclick="openEditor()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-blue); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px;">
                             <span>📝</span>
                             <span>פתח עורך טקסט לעריכה</span>
+                        </div>
+                        <div class="dropdown-item export-docx-item" onclick="downloadAsDocx()" style="padding: 16px 24px; font-size: 32px; color: var(--text-primary); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
+                            <span>📥</span>
+                            <span>שמור סיפור פעיל כקובץ Word (DOCX)</span>
+                        </div>
+                        <div class="dropdown-item import-docx-item" onclick="triggerDocxUpload()" style="padding: 16px 24px; font-size: 32px; color: var(--text-primary); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
+                            <span>📤</span>
+                            <span>העלה סיפור מקובץ Word (DOCX)</span>
                         </div>
                         <div class="dropdown-item new-story-item" onclick="openNewStoryModal()" style="padding: 16px 24px; font-size: 32px; color: var(--accent-yellow); cursor: pointer; font-weight: bold; transition: background 0.2s; display: flex; align-items: center; gap: 10px; border-top: 2px solid #2c3540;">
                             <span>➕</span>
@@ -1509,6 +1531,143 @@
                 alert("שגיאה בשמירת ההגדרות בענן.");
             }
         }
+
+        // DOCX Upload Trigger
+        function triggerDocxUpload() {
+            document.getElementById('docx-upload-input').click();
+            document.getElementById('stories-dropdown').style.display = 'none';
+            const arrow = document.getElementById('dropdown-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        }
+
+        // DOCX Upload Handler
+        function handleDocxUpload(event) {
+            if (!currentUser) return;
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const storyName = file.name.replace(/\.[^/.]+$/, ""); // Extract filename without extension
+            
+            document.getElementById('status-bar').innerText = "קורא את קובץ ה-Word...";
+            
+            const reader = new FileReader();
+            reader.onload = function(loadEvent) {
+                const arrayBuffer = loadEvent.target.result;
+                
+                mammoth.extractRawText({ arrayBuffer: arrayBuffer })
+                    .then(async function(result) {
+                        const text = result.value || "";
+                        
+                        document.getElementById('status-bar').innerText = "שומר סיפור חדש בענן...";
+                        
+                        // Add to Firestore
+                        const storyRef = await db.collection('users').doc(currentUser.uid).collection('stories').add({
+                            name: storyName,
+                            text: text,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        // Set as active
+                        await db.collection('users').doc(currentUser.uid).set({
+                            activeStoryId: storyRef.id
+                        }, { merge: true });
+                        
+                        document.getElementById('status-bar').innerText = `הסיפור '${storyName}' הועלה בהצלחה!`;
+                        speak(`העלינו בהצלחה את הסיפור: ${storyName}`);
+                        loadConfig();
+                    })
+                    .catch(function(err) {
+                        console.error(err);
+                        document.getElementById('status-bar').innerText = "שגיאה בקריאת הקובץ";
+                        alert("שגיאה בפענוח קובץ ה-Word: " + err.message);
+                    });
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = ''; // Reset input
+        }
+
+        // DOCX Download Generator
+        async function downloadAsDocx() {
+            if (!currentUser || !activeStoryId) {
+                alert("אין סיפור פעיל להורדה");
+                return;
+            }
+            
+            document.getElementById('stories-dropdown').style.display = 'none';
+            const arrow = document.getElementById('dropdown-arrow');
+            if (arrow) arrow.style.transform = 'rotate(0deg)';
+            
+            document.getElementById('status-bar').innerText = "מכין קובץ Word להורדה...";
+            try {
+                const storyDoc = await db.collection('users').doc(currentUser.uid).collection('stories').doc(activeStoryId).get();
+                if (!storyDoc.exists) {
+                    alert("הסיפור לא נמצא");
+                    return;
+                }
+                
+                const storyData = storyDoc.data();
+                const storyName = storyData.name || "סיפור ללא שם";
+                const text = storyData.text || "";
+                
+                const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = window.docx;
+                const paragraphs = text.split('\n').map(p => p.trim());
+                
+                const docChildren = [];
+                
+                // Add Title
+                docChildren.push(new Paragraph({
+                    text: storyName,
+                    heading: HeadingLevel.TITLE,
+                    bidirectional: true,
+                    alignment: AlignmentType.RIGHT,
+                    spacing: { after: 300 }
+                }));
+                
+                // Add Body paragraphs
+                paragraphs.forEach(pText => {
+                    if (pText) {
+                        docChildren.push(new Paragraph({
+                            bidirectional: true,
+                            alignment: AlignmentType.RIGHT,
+                            spacing: { after: 200 },
+                            children: [
+                                new TextRun({
+                                    text: pText,
+                                    size: 28, // 14pt (represented in half-points)
+                                    font: "Arial"
+                                })
+                            ]
+                        }));
+                    }
+                });
+                
+                const doc = new Document({
+                    sections: [{
+                        properties: {},
+                        children: docChildren
+                    }]
+                });
+                
+                const blob = await Packer.toBlob(doc);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${storyName}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                document.getElementById('status-bar').innerText = "ההורדה החלה!";
+                speak("קובץ הוורד מוכן להורדה");
+            } catch (err) {
+                console.error(err);
+                document.getElementById('status-bar').innerText = "שגיאה ביצירת קובץ Word";
+                alert("שגיאה בהורדת הקובץ: " + err.message);
+            }
+        }
     </script>
+    <!-- Hidden input for file upload -->
+    <input type="file" id="docx-upload-input" accept=".docx" onchange="handleDocxUpload(event)" style="display: none;">
 </body>
 </html>
