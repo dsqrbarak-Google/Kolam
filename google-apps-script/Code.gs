@@ -165,7 +165,7 @@ function getSettings() {
     masked_key: apiKey ? (apiKey.substring(0, 6) + "..." + apiKey.substring(apiKey.length - 4)) : "",
     active_story_name: activeStoryName,
     active_story_url: activeStoryUrl,
-    version: "0.1.17"
+    version: "0.1.18"
   };
 }
 
